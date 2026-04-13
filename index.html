@@ -1679,15 +1679,18 @@
         if (u === masterData.hod.username.toLowerCase() && p === masterData.hod.password) currentUser = { name: masterData.hod.name, role: "hod" };
         else if (u === 'hod' && p === 'hod@2024') currentUser = { name: masterData.hod.name, role: "hod" }; // fallback
       } else {
+        // Primary: exact username match (case-insensitive)
         const found = masterData.managers.find(m => m.username.toLowerCase() === u);
         if (found && found.password === p) {
           currentUser = { name: found.name, username: found.username, role: "manager" };
         } else {
-          // Backward compatibility fallback for dynamically typed old names
-          const oldFound = masterData.managers.find(m => m.name.toLowerCase().replace(/[\.\s]/g, '').includes(u.replace(/[\.\s]/g, '')));
-          if (oldFound) {
-            const nk = oldFound.name.toLowerCase().replace(/[\.\s]/g, '');
-            if (p === u + '123' || p === nk + '123') currentUser = { name: oldFound.name, username: oldFound.username, role: "manager" };
+          // Fallback: match by name (handles username typos) - still requires correct password
+          const nameFound = masterData.managers.find(m => {
+            const clean = m.name.toLowerCase().replace(/mr\.|ms\.|[\s.]/gi, '');
+            return clean.startsWith(u.replace(/[\s.]/g, ''));
+          });
+          if (nameFound && nameFound.password === p) {
+            currentUser = { name: nameFound.name, username: nameFound.username, role: "manager" };
           }
         }
       }
