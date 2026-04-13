@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>L&D Enterprise HUB v10 — Full Suite</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --primary: #0075FF;
+      --primary-hover: #0056b3;
+      --accent: #2CD9FF;
+      --bg-dark: #0F123B;
+      --card-bg: linear-gradient(127.09deg, rgba(6, 11, 40, 0.8) 19.41%, rgba(10, 14, 35, 0.6) 76.65%);
+      --card-border: 1px solid rgba(255, 255, 255, 0.1);
+      --text-main: #FFFFFF;
+      --text-muted: #A0AEC0;
+      --success: #01B574;
+      --danger: #E31A1A;
+      --hod: #825EE4;
+      --nav-width: 260px;
+      --card-radius: 20px;
+      --btn-radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #020516;
+      /* Base dark fallback */
+      background-image:
+        radial-gradient(ellipse at 15% 50%, rgba(0, 117, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 30%, rgba(130, 94, 228, 0.15) 0%, transparent 50%);
+      background-attachment: fixed;
+      margin: 0;
+      color: var(--text-main);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ==== LOGIN PAGE ==== */
+    #loginPage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, rgba(15, 18, 59, 0.95) 0%, rgba(2, 5, 22, 1) 100%);
+      position: fixed;
+      width: 100%;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: var(--card-border);
+      padding: 40px;
+      border-radius: var(--card-radius);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+      width: 400px;
+      text-align: center;
+    }
+
+    .login-card h1 {
+      color: var(--text-main);
+      margin-bottom: 5px;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .role-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 25px;
+      border-radius: var(--btn-radius);
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 5px;
+    }
+
+    .role-tab {
+      flex: 1;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 8px;
+      transition: .3s ease;
+    }
+
+    .role-tab.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0, 117, 255, 0.4);
+    }
+
+    .login-card input {
+      width: 100%;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      background: rgba(15, 21, 53, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      border-radius: var(--btn-radius);
+      font-family: inherit;
+      outline: none;
+      transition: .2s;
+    }
+
+    .login-card input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px rgba(0, 117, 255, 0.2);
+    }
+
+    .login-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      width: 100%;
+      border-radius: var(--btn-radius);
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 15px;
+      transition: .3s;
+      box-shadow: 0 4px 15px rgba(0, 117, 255, 0.4);
+    }
+
+    .login-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .login-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 15px;
+    }
+
+    /* ==== APP LAYOUT ==== */
+    #appContent {
+      display: none;
+      /* revealed after login */
+      flex-direction: row;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR NAVIGATION */
+    nav {
+      width: var(--nav-width);
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: var(--card-border);
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 30px 20px;
+      z-index: 1000;
+    }
+
+    .nav-brand {
+      font-weight: 800;
+      font-size: 16px;
+      white-space: nowrap;
+      margin-bottom: 40px;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 15px;
+    }
+
+    .nav-brand span {
+      margin-top: 5px;
+      opacity: 0.8;
+      font-size: 12px;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .nav-link {
+      cursor: pointer;
+      padding: 12px 16px;
+      border-radius: var(--btn-radius);
+      transition: .3s;
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .nav-link.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0, 117, 255, 0.4);
+    }
+
+    .nav-link.hod-tab {
+      border: 1px solid rgba(130, 94, 228, 0.3);
+    }
+
+    .nav-links button {
+      /* Logout Button */
+      margin-top: auto;
+      padding: 12px 16px;
+      background: rgba(227, 26, 26, 0.1) !important;
+      color: var(--danger) !important;
+      border: 1px solid rgba(227, 26, 26, 0.2) !important;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+      transition: .3s;
+    }
+
+    .nav-links button:hover {
+      background: rgba(227, 26, 26, 0.2) !important;
+    }
+
+    /* MAIN CONTENT */
+    .container {
+      margin-left: var(--nav-width);
+      /* Push content next to sidebar */
+      width: calc(100% - var(--nav-width));
+      max-width: 1400px;
+      padding: 30px;
+      padding-top: 40px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: var(--card-border);
+      border-radius: var(--card-radius);
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin: 0 0 20px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    select,
+    input[type=text],
+    input[type=date],
+    input[type=month],
+    input[type=password],
+    input[type=number],
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(15, 21, 53, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: var(--text-main) !important;
+      border-radius: var(--btn-radius);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: .2s;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 10px rgba(0, 117, 255, 0.2);
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    /* Override Date/Time Icon Colors for dark mode */
+    ::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: var(--btn-radius);
+      cursor: pointer;
+      font-weight: 700;
+      width: 100%;
+      margin-top: 14px;
+      font-size: 13px;
+      transition: .3s;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 15px rgba(0, 117, 255, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 117, 255, 0.6);
+    }
+
+    .btn-purple {
+      background: var(--hod);
+      color: white;
+      box-shadow: 0 4px 15px rgba(130, 94, 228, 0.4);
+    }
+
+    .btn-purple:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(130, 94, 228, 0.6);
+    }
+
+    .btn-green {
+      background: var(--success);
+      color: white;
+      box-shadow: 0 4px 15px rgba(1, 181, 116, 0.4);
+    }
+
+    .btn-green:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(1, 181, 116, 0.6);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .tab-content.active-tab {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ==== TARGET GROUP CHECKBOXES ==== */
+    .cat-box {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 14px;
+      height: 175px;
+      overflow-y: auto;
+      border-radius: var(--btn-radius);
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Scrollbar styling */
+    .cat-box::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .cat-box::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+    }
+
+    .cat-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .cat-item input[type=checkbox] {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .cat-item span {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    /* ==== CALENDAR GRIDS (Executive Wall) ==== */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px;
+      border-radius: var(--card-radius);
+    }
+
+    .calendar-day {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      min-height: 140px;
+      padding: 10px;
+      border-radius: 12px;
+      transition: .2s;
+    }
+
+    .calendar-day:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .calendar-day-num {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: inline-block;
+    }
+
+    .cal-entry {
+      font-size: 10px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: white;
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      border-left: 3px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .entry-visit {
+      background: rgba(0, 117, 255, 0.4);
+      border-color: #0075FF;
+    }
+
+    .entry-trg {
+      background: rgba(130, 94, 228, 0.4);
+      border-color: #825EE4;
+    }
+
+    .entry-report {
+      background: rgba(1, 181, 116, 0.4);
+      border-color: #01B574;
+    }
+
+    /* ==== TABLES ==== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.03) !important;
+      color: var(--text-muted) !important;
+      padding: 14px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    tr {
+      background: transparent !important;
+      color: inherit !important;
+    }
+
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .color-approved {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .color-pending {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* ==== BADGES ==== */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-visit {
+      background: rgba(0, 117, 255, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(0, 117, 255, 0.3);
+    }
+
+    .badge-train {
+      background: rgba(130, 94, 228, 0.1);
+      color: #b7a1f5;
+      border: 1px solid rgba(130, 94, 228, 0.3);
+    }
+
+    .badge-report {
+      background: rgba(1, 181, 116, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(1, 181, 116, 0.3);
+    }
+
+    .badge-ok {
+      background: rgba(1, 181, 116, 0.1);
+      color: var(--success);
+    }
+
+    .badge-pend {
+      background: rgba(227, 26, 26, 0.1);
+      color: #ff5b5b;
+    }
+
+    .badge-hod {
+      background: rgba(130, 94, 228, 0.2);
+      color: #d0bfff;
+    }
+
+    /* ==== PERFORMANCE DASHBOARD ==== */
+    .perf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .perf-card {
+      background: rgba(15, 21, 53, 0.5);
+      border-radius: var(--card-radius);
+      padding: 20px;
+      border: var(--card-border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .perf-card::before {
+      /* Glowing top border effect */
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    .perf-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text-main);
+      margin-bottom: 16px;
+    }
+
+    .perf-bar-wrap {
+      margin-bottom: 12px;
+    }
+
+    .perf-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .perf-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .perf-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    .perf-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .perf-stat {
+      text-align: center;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .perf-stat-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+
+    .perf-stat-lbl {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ==== VISIT REPORT FORMS ==== */
+    .report-section {
+      border: var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .report-section-title {
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .report-section input[readonly] {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+    }
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .rating-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .star-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .star {
+      font-size: 20px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.1);
+      transition: .2s;
+    }
+
+    .star.lit {
+      color: #FFB547;
+      text-shadow: 0 0 10px rgba(255, 181, 71, 0.5);
+    }
+
+    .rating-num {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      width: 25px;
+    }
+
+    .report-card {
+      border: var(--card-border);
+      border-radius: var(--card-radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      transition: .2s;
+    }
+
+    .report-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .report-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .report-card-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-main);
+    }
+
+    .report-card-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ==== AI BOT ==== */
+    .bot-wrap {
+      display: flex;
+      flex-direction: column;
+      height: 450px;
+      border: var(--card-border);
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .bot-msgs {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Scrollbar for bot */
+    .bot-msgs::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .bot-msgs::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+    }
+
+    .bot-msg {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .bot-msg.bot {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .bot-msg.user {
+      background: var(--primary);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 15px rgba(0, 117, 255, 0.3);
+    }
+
+    .bot-input-row {
+      display: flex;
+      gap: 10px;
+      padding: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border-top: var(--card-border);
+    }
+
+    .bot-input-row input {
+      flex: 1;
+      margin: 0;
+      border-radius: 20px;
+    }
+
+    .bot-send {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 13px;
+      white-space: nowrap;
+      transition: .2s;
+    }
+
+    .bot-send:hover {
+      background: #1ebbdfff;
+      transform: translateY(-1px);
+    }
+
+    .bot-typing {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 4px 0;
+    }
+
+    .bot-typing span {
+      width: 6px;
+      height: 6px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: bounce .8s infinite;
+    }
+
+    .bot-typing span:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .bot-typing span:nth-child(3) {
+      animation-delay: .3s;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      80%,
+      100% {
+        transform: translateY(0)
+      }
+
+      40% {
+        transform: translateY(-6px)
+      }
+    }
+
+    /* ==== ADMIN TABS ==== */
+    .admin-subtabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 0;
+      overflow-x: auto;
+    }
+
+    .admin-subtabs::-webkit-scrollbar {
+      height: 0;
+    }
+
+    .admin-subtab {
+      padding: 12px 20px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+      border-radius: 12px 12px 0 0;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      white-space: nowrap;
+      transition: .2s;
+    }
+
+    .admin-subtab:hover {
+      color: var(--text-main);
+    }
+
+    .admin-subtab.active {
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+      background: rgba(44, 217, 255, 0.05);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginPage">
+    <div class="login-card">
+      <h1>L&D HUB v10</h1>
+      <p style="font-size:12px;color:#666;margin-bottom:14px">Enterprise Resource Hub — Secure Access</p>
+      <div class="role-tabs">
+        <button class="role-tab active" onclick="setLoginRole('manager',this)">👤 Manager</button>
+        <button class="role-tab" onclick="setLoginRole('hod',this)">👔 HOD</button>
+        <button class="role-tab" onclick="setLoginRole('admin',this)">🛡 Admin</button>
+      </div>
+      <input type="text" id="userLogin" placeholder="Username">
+      <input type="password" id="passLogin" placeholder="Password" onkeydown="if(event.key==='Enter')attemptLogin()">
+      <button class="login-btn" onclick="attemptLogin()">ENTER SYSTEM</button>
+      <p class="login-hint" id="loginHint">Enter your first name as username (e.g. ashokan) · password: firstname123</p>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="appContent">
+    <nav>
+      <div class="nav-brand">L&D ENTERPRISE HUB <span style="font-weight:300;font-size:11px">| <span id="navUser"
+            style="color:var(--accent)"></span></span></div>
+      <div class="nav-links" id="navLinks">
+        <div class="nav-link" id="nl-planner" onclick="showTabByName('planner')">✈ Travel Entry</div>
+        <div class="nav-link" id="nl-training" onclick="showTabByName('training')">🎓 Training Entry</div>
+        <div class="nav-link" id="nl-report" onclick="showTabByName('report')">📋 Visit Report</div>
+        <div class="nav-link" id="nl-master" onclick="showTabByName('master')">🗓 Master Schedule</div>
+        <div class="nav-link" id="nl-wall" onclick="showTabByName('wall')">🗺 Exec Wall</div>
+        <div class="nav-link hod-tab" id="nl-hod" onclick="showTabByName('hod')">👔 HOD Dashboard</div>
+        <div class="nav-link hod-tab" id="nl-perf" onclick="showTabByName('perf')">📊 Performance</div>
+        <div class="nav-link hod-tab" id="nl-admin" onclick="showTabByName('admin')">🛡 Admin</div>
+        <button onclick="logout()"
+          style="background:#ff5252;color:white;border:none;padding:5px 12px;border-radius:4px;font-size:9px;cursor:pointer;margin-left:6px;">LOGOUT</button>
+      </div>
+    </nav>
+
+    <div class="container">
+
+      <!-- TRAVEL ENTRY -->
+      <div id="tab-planner" class="tab-content">
+        <div class="card">
+          <h2>✈ Submit Travel Itinerary</h2>
+          <div class="form-grid">
+            <div><label>Manager</label><input type="text" id="p_mgr_fixed" readonly style="background:#eee"></div>
+            <div><label>Showroom</label><select id="p_room"></select></div>
+            <div><label>From Date</label><input type="date" id="p_from"></div>
+            <div><label>To Date</label><input type="date" id="p_to"></div>
+            <div><label>Purpose</label><select id="p_purp">
+                <option>Showroom Visit</option>
+                <option>Corporate Work</option>
+                <option>Showroom Audit</option>
+                <option>Induction</option>
+                <option>Skill Based Training</option>
+                <option>Product Training - Gold</option>
+                <option>Product Training - Diamond</option>
+                <option>Product Training - Silver</option>
+              </select></div>
+            <div><label>Mode</label><select id="p_mode">
+                <option>Flight ✈️</option>
+                <option>Train 🚆</option>
+                <option>Bus 🚌</option>
+                <option>Car 🚗</option>
+              </select></div>
+            <div><label>Bookings</label>
+              <div style="display:flex;gap:5px">
+                <select id="p_h">
+                  <option value="P">🏨 Hotel: No</option>
+                  <option value="B">🏨 Hotel: Yes</option>
+                </select>
+                <select id="p_t">
+                  <option value="P">✈ Travel: No</option>
+                  <option value="B">✈ Travel: Yes</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="submitVisit()">Submit Itinerary</button>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <h2>🕘 Recent Travel Entries</h2>
+          <div style="overflow-x:auto;">
+            <table id="recentTravelTable">
+              <thead>
+                <tr>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Location</th>
+                  <th>Subject</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+            <span id="travelPageInfo" style="font-size:12px;color:var(--text-muted)">Showing latest</span>
+            <button class="btn btn-primary" style="padding:6px 14px;font-size:11px;"
+              onclick="nextRecentTravelPage()">Next 5 ⏭</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRAINING ENTRY -->
+      <div id="tab-training" class="tab-content">
+        <div class="card">
+          <h2>🎓 Schedule Training Session</h2>
+          <div class="form-grid">
+            <div><label>Topic</label>
+              <select id="t_topic"></select>
+            </div>
+            <div><label>Showroom / Location</label><select id="t_showroom"></select></div>
+            <div><label>Venue</label>
+              <select id="t_venue"></select>
+            </div>
+            <div><label>From Date</label><input type="date" id="t_from"></div>
+            <div><label>To Date</label><input type="date" id="t_to"></div>
+            <div><label>Start Time</label><select id="t_start_time"></select></div>
+            <div><label>End Time</label><select id="t_end_time"></select></div>
+          </div>
+          <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+            <div><label>Target Groups</label>
+              <div id="t_cats_box" class="cat-box"></div>
+            </div>
+            <div>
+              <label>Remarks</label>
+              <textarea id="t_remarks" style="height:65px;resize:vertical;"></textarea>
+              <div style="margin-top:10px"><label>Lead Manager</label><input type="text" id="t_mgr_fixed" readonly
+                  style="background:#eee"></div>
+            </div>
+          </div>
+          <button class="btn btn-purple" onclick="submitTraining()">Submit Training</button>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <h2>🎓 Recent Training Entries</h2>
+          <div style="overflow-x:auto;">
+            <table id="recentTrainingTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Topic</th>
+                  <th>Location</th>
+                  <th>Venue</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+            <span id="trainingPageInfo" style="font-size:12px;color:var(--text-muted)">Showing latest</span>
+            <button class="btn btn-purple" style="padding:6px 14px;font-size:11px;"
+              onclick="nextRecentTrainingPage()">Next 5 ⏭</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHOWROOM VISIT REPORT -->
+      <div id="tab-report" class="tab-content">
+        <div class="card">
+          <h2>📋 Showroom Visit Report</h2>
+          <div style="display:flex;gap:8px;margin-bottom:20px;">
+            <button id="rsubtab-new-btn" onclick="showReportSubtab('new')"
+              style="padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:var(--primary);color:white;">+
+              New Report</button>
+            <button id="rsubtab-list-btn" onclick="showReportSubtab('list')"
+              style="padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:#eee;color:#555;">📁
+              My Reports</button>
+          </div>
+
+          <!-- NEW REPORT FORM -->
+          <div id="rsubtab-new">
+
+            <!-- SECTION 1: HEADER -->
+            <div class="report-section">
+              <div class="report-section-title">🏷 Visit Details</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
+                <div><label>L&D Manager (Visiting)</label><input type="text" id="vr_mgr" readonly
+                    style="background:#eee;"></div>
+                <div><label>Store / Location</label><select id="vr_showroom"></select></div>
+                <div><label>From Date</label><input type="date" id="vr_from"></div>
+                <div><label>To Date</label><input type="date" id="vr_to"></div>
+                <div><label>Region</label><select id="vr_region"></select></div>
+                <div><label>AGM / DGM / GM for the Store</label><input type="text" id="vr_agm"
+                    placeholder="e.g. Mr. Viswanathan"></div>
+                <div><label>Level 1 Manager</label><input type="text" id="vr_l1mgr" placeholder="e.g. Mr. Murugan">
+                </div>
+              </div>
+              <div style="margin-top:12px;">
+                <label>Showroom Trainers (with Availability)</label>
+                <textarea id="vr_trainers" style="height:55px;resize:vertical;"
+                  placeholder="1. Ms. Rajeswari (Yes)&#10;2. Mr. Pondurai (Yes)"></textarea>
+              </div>
+            </div>
+
+            <!-- SECTION 2: TRAINING SESSIONS DELIVERED -->
+            <div class="report-section">
+              <div class="report-section-title">🎓 Training Sessions Delivered</div>
+              <div style="overflow-x:auto;">
+                <table style="margin-top:0;" id="vr_sessions_table">
+                  <thead>
+                    <tr style="background:#1a237e;color:white;">
+                      <th style="background:#1a237e;color:white;width:40px;">#</th>
+                      <th style="background:#1a237e;color:white;">Name of the Topic</th>
+                      <th style="background:#1a237e;color:white;">Date</th>
+                      <th style="background:#1a237e;color:white;">Day</th>
+                      <th style="background:#1a237e;color:white;width:110px;">No. of Participants</th>
+                      <th style="background:#1a237e;color:white;width:120px;">SFT / CLT / EL</th>
+                      <th style="background:#1a237e;color:white;width:40px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="vr_sessions_body"></tbody>
+                </table>
+              </div>
+              <button onclick="addSessionRow()"
+                style="margin-top:8px;padding:6px 14px;background:#e8eaf6;border:1px solid #c5cae9;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;color:#1a237e;">+
+                Add Session</button>
+            </div>
+
+            <!-- SECTION 3: STAFF GROOMING -->
+            <div class="report-section">
+              <div class="report-section-title">👔 Staff Grooming</div>
+              <div style="overflow-x:auto;">
+                <table style="margin-top:0;">
+                  <thead>
+                    <tr style="background:#1a237e;color:white;">
+                      <th style="background:#1a237e;color:white;width:40px;">#</th>
+                      <th style="background:#1a237e;color:white;">Category</th>
+                      <th style="background:#1a237e;color:white;width:130px;">Avg. Score (1–10)</th>
+                      <th style="background:#1a237e;color:white;width:130px;">No. of Staff Checked</th>
+                      <th style="background:#1a237e;color:white;">Areas of Lacunae</th>
+                      <th style="background:#1a237e;color:white;">Course Correction</th>
+                    </tr>
+                  </thead>
+                  <tbody id="vr_grooming_body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SECTION 4: CUSTOMER FEEDBACK -->
+            <div class="report-section">
+              <div class="report-section-title">💬 Customer Feedback</div>
+              <div style="overflow-x:auto;">
+                <table style="margin-top:0;">
+                  <thead>
+                    <tr style="background:#1a237e;color:white;">
+                      <th style="background:#1a237e;color:white;width:40px;">#</th>
+                      <th style="background:#1a237e;color:white;">Feedback Mechanism</th>
+                      <th style="background:#1a237e;color:white;width:110px;">Score / Rating</th>
+                      <th style="background:#1a237e;color:white;width:110px;">No. of Feedbacks</th>
+                      <th style="background:#1a237e;color:white;width:90px;">Positives</th>
+                      <th style="background:#1a237e;color:white;width:90px;">Neutral</th>
+                      <th style="background:#1a237e;color:white;width:90px;">Negatives</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td><input type="text" id="vr_fb1_mech" value="Google Review"
+                          style="border:none;background:transparent;width:100%;"></td>
+                      <td><input type="text" id="vr_fb1_score" placeholder="e.g. 4.9"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+                      <td><input type="number" id="vr_fb1_count" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                      <td><input type="number" id="vr_fb1_pos" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                      <td><input type="number" id="vr_fb1_neu" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                      <td><input type="number" id="vr_fb1_neg" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td><input type="text" id="vr_fb2_mech" value="Mail Review"
+                          style="border:none;background:transparent;width:100%;"></td>
+                      <td><input type="text" id="vr_fb2_score" placeholder="—"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+                      <td><input type="number" id="vr_fb2_count" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                      <td><input type="number" id="vr_fb2_pos" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                      <td><input type="number" id="vr_fb2_neu" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                      <td><input type="number" id="vr_fb2_neg" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td><input type="text" id="vr_fb3_mech" value="Customer Interaction"
+                          style="border:none;background:transparent;width:100%;"></td>
+                      <td><input type="text" id="vr_fb3_score" placeholder="—"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+                      <td><input type="number" id="vr_fb3_count" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                      <td><input type="number" id="vr_fb3_pos" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                      <td><input type="number" id="vr_fb3_neu" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                      <td><input type="number" id="vr_fb3_neg" placeholder="0"
+                          style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"
+                          min="0"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SECTION 5: COMPLIANCE CHECKLIST -->
+            <div class="report-section">
+              <div class="report-section-title">✅ Compliance Checklist</div>
+              <p style="font-size:10px;color:#888;margin:0 0 10px;">Legend: <b>FC</b> = Full Compliance &nbsp;|&nbsp;
+                <b>PC</b> = Partial Compliance &nbsp;|&nbsp; <b>NC</b> = Non Compliance
+              </p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="vr_compliance_grid"></div>
+              <div style="margin-top:10px;"><label>Comments (if any)</label><textarea id="vr_compliance_comments"
+                  style="height:45px;resize:vertical;" placeholder="Any observations on compliance..."></textarea></div>
+            </div>
+
+            <!-- SECTION 6: OBSERVATIONS MADE -->
+            <div class="report-section">
+              <div class="report-section-title">🔍 Observations Made</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div><label>Product Related</label><textarea id="vr_obs_product" style="height:70px;resize:vertical;"
+                    placeholder="Product-related observations..."></textarea></div>
+                <div><label>Process Related</label><textarea id="vr_obs_process" style="height:70px;resize:vertical;"
+                    placeholder="Process-related observations..."></textarea></div>
+                <div><label>People Related</label><textarea id="vr_obs_people" style="height:70px;resize:vertical;"
+                    placeholder="People-related observations..."></textarea></div>
+                <div><label>Training Related</label><textarea id="vr_obs_training" style="height:70px;resize:vertical;"
+                    placeholder="Training-related observations..."></textarea></div>
+              </div>
+            </div>
+
+            <!-- SECTION 7: TRAINING NEEDS -->
+            <div class="report-section">
+              <div class="report-section-title">📌 Training Needs Identified</div>
+              <div style="overflow-x:auto;">
+                <table style="margin-top:0;" id="vr_needs_table">
+                  <thead>
+                    <tr style="background:#1a237e;color:white;">
+                      <th style="background:#1a237e;color:white;width:40px;">#</th>
+                      <th style="background:#1a237e;color:white;">Training Need</th>
+                      <th style="background:#1a237e;color:white;width:130px;">Priority</th>
+                      <th style="background:#1a237e;color:white;width:100px;">TAT</th>
+                      <th style="background:#1a237e;color:white;width:160px;">Category</th>
+                      <th style="background:#1a237e;color:white;width:130px;">Shared By</th>
+                      <th style="background:#1a237e;color:white;width:40px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="vr_needs_body"></tbody>
+                </table>
+              </div>
+              <button onclick="addNeedRow()"
+                style="margin-top:8px;padding:6px 14px;background:#e8eaf6;border:1px solid #c5cae9;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;color:#1a237e;">+
+                Add Training Need</button>
+            </div>
+
+            <!-- SECTION 8: BUDDY TRAINING AUDIT -->
+            <div class="report-section">
+              <div class="report-section-title">🤝 Buddy Training Audit</div>
+              <div style="overflow-x:auto;">
+                <table style="margin-top:0;" id="vr_buddy_table">
+                  <thead>
+                    <tr style="background:#1a237e;color:white;">
+                      <th style="background:#1a237e;color:white;width:40px;">#</th>
+                      <th style="background:#1a237e;color:white;">Name of the Buddy</th>
+                      <th style="background:#1a237e;color:white;">DOJ</th>
+                      <th style="background:#1a237e;color:white;width:90px;">Empl. ID</th>
+                      <th style="background:#1a237e;color:white;">Sub Dept.</th>
+                      <th style="background:#1a237e;color:white;width:120px;">Knowledge Level</th>
+                      <th style="background:#1a237e;color:white;">Name of Buddy Trainer</th>
+                      <th style="background:#1a237e;color:white;">Comments</th>
+                      <th style="background:#1a237e;color:white;width:40px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="vr_buddy_body"></tbody>
+                </table>
+              </div>
+              <button onclick="addBuddyRow()"
+                style="margin-top:8px;padding:6px 14px;background:#e8eaf6;border:1px solid #c5cae9;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;color:#1a237e;">+
+                Add Buddy</button>
+            </div>
+
+            <!-- SECTION 9: OVERALL FEEDBACK -->
+            <div class="report-section">
+              <div class="report-section-title">📝 Overall Feedback</div>
+              <textarea id="vr_overall_feedback" style="height:130px;resize:vertical;width:100%;"
+                placeholder="1. Morning Briefing: ...&#10;2. Training Conducted: ...&#10;3. Grooming Audit: ...&#10;4. Visual Impact: ...&#10;5. Key Takeaways: ..."></textarea>
+            </div>
+
+            <!-- SECTION 10: RETAIL AWARDS -->
+            <div class="report-section">
+              <div class="report-section-title">🏆 Retail Awards (if any during this visit period)</div>
+              <div style="overflow-x:auto;">
+                <table style="margin-top:0;" id="vr_awards_table">
+                  <thead>
+                    <tr style="background:#1a237e;color:white;">
+                      <th style="background:#1a237e;color:white;width:40px;">#</th>
+                      <th style="background:#1a237e;color:white;">Month</th>
+                      <th style="background:#1a237e;color:white;">Size</th>
+                      <th style="background:#1a237e;color:white;">Counter</th>
+                      <th style="background:#1a237e;color:white;">Description</th>
+                      <th style="background:#1a237e;color:white;">Mail Date</th>
+                      <th style="background:#1a237e;color:white;width:40px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="vr_awards_body"></tbody>
+                </table>
+              </div>
+              <button onclick="addAwardRow()"
+                style="margin-top:8px;padding:6px 14px;background:#e8eaf6;border:1px solid #c5cae9;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;color:#1a237e;">+
+                Add Award</button>
+            </div>
+
+            <!-- SECTION 11: CUSTOMER FEEDBACK LOG -->
+            <div class="report-section">
+              <div class="report-section-title">📧 Customer Feedback / Mail Log</div>
+              <div style="overflow-x:auto;">
+                <table style="margin-top:0;" id="vr_fblog_table">
+                  <thead>
+                    <tr style="background:#1a237e;color:white;">
+                      <th style="background:#1a237e;color:white;width:40px;">#</th>
+                      <th style="background:#1a237e;color:white;">Mail Subject</th>
+                      <th style="background:#1a237e;color:white;">Staff Details</th>
+                      <th style="background:#1a237e;color:white;">Date</th>
+                      <th style="background:#1a237e;color:white;">Comments</th>
+                      <th style="background:#1a237e;color:white;">Nature of Feedback</th>
+                      <th style="background:#1a237e;color:white;">Related To</th>
+                      <th style="background:#1a237e;color:white;">Remarks</th>
+                      <th style="background:#1a237e;color:white;width:40px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="vr_fblog_body"></tbody>
+                </table>
+              </div>
+              <button onclick="addFbLogRow()"
+                style="margin-top:8px;padding:6px 14px;background:#e8eaf6;border:1px solid #c5cae9;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;color:#1a237e;">+
+                Add Feedback Entry</button>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:6px;">
+              <button class="btn btn-green" style="flex:1;" onclick="submitVisitReport()">✅ Submit Visit Report</button>
+              <button class="btn" style="flex:0 0 auto;width:auto;padding:11px 20px;background:#eee;color:#555;"
+                onclick="resetReportForm()">🔄 Reset Form</button>
+            </div>
+          </div>
+
+          <!-- REPORT LIST -->
+          <div id="rsubtab-list" class="hidden">
+            <div id="reportListWrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MASTER SCHEDULE -->
+      <div id="tab-master" class="tab-content">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <h2 style="margin:0;">🗓 Consolidated Master Schedule</h2>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <select id="master-filter-loc" onchange="renderAll()" style="width:160px;"></select>
+              <input type="date" id="master-filter-date" onchange="renderAll()" style="width:140px;">
+            </div>
+          </div>
+          <table id="masterTable">
+            <thead>
+              <tr>
+                <th>Dates / Time</th>
+                <th>Location</th>
+                <th>Manager</th>
+                <th>Activity</th>
+                <th>Status</th>
+                <th>Bookings</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- EXECUTIVE WALL -->
+      <div id="tab-wall" class="tab-content">
+        <div class="card" style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <h2 style="margin:0;border:none;padding:0;">🗺 Executive Monthly Wall</h2>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <input type="month" id="wallMonth" onchange="renderWall()" style="width:190px">
+              <button onclick="downloadWallPDF()"
+                style="background:#e65100;color:white;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">📥
+                Download PDF</button>
+            </div>
+          </div>
+
+          <div id="pdf-export-container" style="background:transparent;padding:10px;">
+            <h3 style="margin-top:0;color:var(--primary);font-size:15px;" id="travel-title">✈ Travel Entries</h3>
+            <div id="wallGridTravel" class="calendar-grid" style="margin-bottom: 24px;"></div>
+
+            <div class="html2pdf__page-break"></div>
+
+            <h3 style="margin-top:24px;color:var(--primary);font-size:15px;" id="training-title">🎓 Training Entries
+            </h3>
+            <div id="wallGridTraining" class="calendar-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOD DASHBOARD -->
+      <div id="tab-hod" class="tab-content">
+        <div class="card">
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+            <h2 style="margin:0;border:none;padding:0;">👔 HOD Overview — All Team Entries</h2>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <span id="hod-stat-total"
+                style="background:var(--primary);color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;">Total:
+                0</span>
+              <span id="hod-stat-approved"
+                style="background:var(--success);color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;">Approved:
+                0</span>
+              <span id="hod-stat-pending"
+                style="background:var(--danger);color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;">Pending:
+                0</span>
+              <select id="hod-filter-type" onchange="renderHOD()" style="width:auto;padding:7px 10px;font-size:12px;">
+                <option value="">All Types</option>
+                <option value="Visit">Travel</option>
+                <option value="Training">Training</option>
+                <option value="Report">Visit Report</option>
+              </select>
+              <select id="hod-filter-mgr" onchange="renderHOD()" style="width:auto;padding:7px 10px;font-size:12px;">
+                <option value="">All Managers</option>
+              </select>
+              <select id="hod-filter-status" onchange="renderHOD()" style="width:auto;padding:7px 10px;font-size:12px;">
+                <option value="">All Status</option>
+                <option value="Yes">Approved</option>
+                <option value="No">Pending</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table id="hodTable">
+              <thead>
+                <tr style="background:var(--primary);color:white;">
+                  <th style="background:var(--primary);color:white;">#</th>
+                  <th style="background:var(--primary);color:white;">Type</th>
+                  <th style="background:var(--primary);color:white;">Manager</th>
+                  <th style="background:var(--primary);color:white;">From</th>
+                  <th style="background:var(--primary);color:white;">To</th>
+                  <th style="background:var(--primary);color:white;">Location</th>
+                  <th style="background:var(--primary);color:white;">Topic / Purpose</th>
+                  <th style="background:var(--primary);color:white;">Time</th>
+                  <th style="background:var(--primary);color:white;">Bookings</th>
+                  <th style="background:var(--primary);color:white;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="hodTableBody"></tbody>
+            </table>
+          </div>
+          <div id="hod-empty" class="hidden" style="text-align:center;padding:40px;color:#999;">📭 No entries for
+            selected filters.</div>
+        </div>
+      </div>
+
+      <!-- PERFORMANCE DASHBOARD -->
+      <div id="tab-perf" class="tab-content">
+        <div class="card">
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+            <h2 style="margin:0;border:none;padding:0;">📊 Team Performance Dashboard</h2>
+            <div style="display:flex;gap:8px;">
+              <select id="perf-filter-period" onchange="renderPerf()"
+                style="width:auto;padding:7px 10px;font-size:12px;">
+                <option value="all">All Time</option>
+                <option value="thismonth">This Month</option>
+                <option value="lastmonth">Last Month</option>
+                <option value="thisyear">This Year</option>
+              </select>
+            </div>
+          </div>
+          <!-- Summary Strip -->
+          <div id="perf-summary"
+            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:22px;">
+          </div>
+          <!-- Per-Manager Cards -->
+          <div id="perf-grid" class="perf-grid"></div>
+        </div>
+      </div>
+
+      <!-- ADMIN PANEL -->
+      <div id="tab-admin" class="tab-content">
+        <div class="card">
+          <h2>🛡 Administrative Controls</h2>
+          <div id="adminLock">
+            <input type="password" id="adminPass" placeholder="Admin Password"
+              onkeydown="if(event.key==='Enter')unlockAdmin()">
+            <button class="btn btn-primary" onclick="unlockAdmin()">Unlock Console</button>
+          </div>
+          <div id="adminUI" class="hidden">
+            <div class="admin-subtabs">
+              <div class="admin-subtab active" onclick="showAdminSub('entries',this)">📋 All Entries</div>
+              <div class="admin-subtab" onclick="showAdminSub('reports',this)">📄 Visit Reports</div>
+              <div class="admin-subtab" onclick="showAdminSub('bot',this)">🤖 AI Assistant</div>
+              <div class="admin-subtab" onclick="showAdminSub('master',this)">🗃 Master Data</div>
+            </div>
+            <!-- Entries -->
+            <div id="adminsub-entries">
+              <table id="adminTable">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Dates</th>
+                    <th>Manager</th>
+                    <th>Location</th>
+                    <th>Topic</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <!-- Visit Reports review -->
+            <div id="adminsub-reports" class="hidden">
+              <div id="adminReportListWrap"></div>
+            </div>
+            <!-- AI Bot -->
+            <div id="adminsub-bot" class="hidden">
+              <p style="font-size:12px;color:#666;margin-bottom:12px;">Ask the AI assistant anything about showroom
+                visit reports — patterns, issues, manager performance, follow-ups, etc.</p>
+              <div class="bot-wrap">
+                <div class="bot-msgs" id="botMsgs">
+                  <div class="bot-msg bot">👋 Hello! I'm your L&D Visit Report Assistant. Ask me anything about the
+                    showroom visit reports — e.g. <em>"Which showrooms need improvement?"</em> or <em>"Summarize reports
+                      by Ashokan"</em> or <em>"What are the common action points?"</em></div>
+                </div>
+                <div class="bot-input-row">
+                  <input type="text" id="botInput" placeholder="Ask about visit reports..."
+                    onkeydown="if(event.key==='Enter')sendBot()">
+                  <button class="bot-send" onclick="sendBot()">Send ➤</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Master Data -->
+            <div id="adminsub-master" class="hidden">
+              <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+                <div style="flex:0 0 200px;display:flex;flex-direction:column;gap:8px;">
+                  <button class="btn mbtn active" style="text-align:left;background:var(--primary);color:white;"
+                    onclick="changeMasterTab('managers', this)">Managers & Logins</button>
+                  <button class="btn mbtn"
+                    style="text-align:left;background:rgba(255,255,255,0.05);color:var(--text-muted);"
+                    onclick="changeMasterTab('hod', this)">HOD Login</button>
+                  <button class="btn mbtn"
+                    style="text-align:left;background:rgba(255,255,255,0.05);color:var(--text-muted);"
+                    onclick="changeMasterTab('showrooms', this)">Showrooms</button>
+                  <button class="btn mbtn"
+                    style="text-align:left;background:rgba(255,255,255,0.05);color:var(--text-muted);"
+                    onclick="changeMasterTab('regions', this)">Regions</button>
+                  <button class="btn mbtn"
+                    style="text-align:left;background:rgba(255,255,255,0.05);color:var(--text-muted);"
+                    onclick="changeMasterTab('venues', this)">Venues</button>
+                  <button class="btn mbtn"
+                    style="text-align:left;background:rgba(255,255,255,0.05);color:var(--text-muted);"
+                    onclick="changeMasterTab('topics', this)">Topics</button>
+                </div>
+                <div class="card" style="flex:1;min-width:300px;padding:20px;">
+                  <h3 id="masterTitle" style="margin-top:0;color:var(--primary);font-size:16px;">Managers & Logins</h3>
+                  <div id="masterControls"
+                    style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;">
+                    <!-- Controls injected dynamically -->
+                  </div>
+                  <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;margin:0" id="masterTableElement">
+                      <thead>
+                        <tr id="masterThead" style="background:#5e35b1;color:white;"></tr>
+                      </thead>
+                      <tbody id="masterTbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /container -->
+  </div><!-- /appContent -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://dzipybscmmhhgikryhbo.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6aXB5YnNjbW1oaGdpa3J5aGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNzMyMzksImV4cCI6MjA5MTY0OTIzOX0.nuG6oOPkywv7MbpcX6YXnHucsW240RucKLbMID57qmM';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const oldManagers = ["MR.ASHOKAN N", "MR.DEEPAK RAJ KUMAR K", "MR.GOKUL P", "MR.RAMALINGAM", "MR.KESAVAKUMAR", "MR.NILESH", "MR.SANTHOSH KUMAR Y", "MR.SRINIVASAN", "MR.SUBRAMANIAN P", "MR.VENKATA SUBBA RAO", "MR.VENKATESWARAN P", "MS.JEESHA MANOJ", "MS.HINDUJA", "MS.NANDHINI", "MR.RATHISH THAMBU J"];
+    const oldShowrooms = ["Head Office", "Tirupathy", "Usman Road", "Hosur", "Trichy", "Mayavaram", "Vijayawada", "Anna Nagar", "Royapuram", "Madurai", "Theni", "Singapore", "Poonamallee", "Hassan", "Malleshwaram", "Marathahalli", "R R Nagar", "Yelahanka", "Coimbatore", "OMR", "Avadi", "Chengalpet", "Purasaiwakkam", "Arakkonam", "Kancheepuram", "Nizamabad", "Mangesh Street", "Redhills", "Thiruvannamalai", "Villupuram", "Virudhachalam", "A S Rao Nagar", "Chanda Nagar", "Hyderabad", "Kukatpally", "Coats Road", "Perambur", "Jayanagar - O", "Salem", "Dharmapuri", "Erode", "Kumbakonam", "Thanjavur", "Nanganallur", "Thiruvallur", "Valasaravakkam", "Tirunelveli", "Tuticorin", "Valliyur", "Guduvancheri", "Vizianagaram", "Gajuwaka", "Guntur", "Kakinada", "Rajahmundry", "Vizag", "Madanapalle", "Anantapur", "Tambaram", "Bangalore", "K R Puram", "Kammanahalli", "Adyar", "Velacherry", "Anna Nagar -II", "Cuddalore", "Pondicherry", "Vellore", "Gachibowli", "Ashok Nagar", "Thiruvottiyur", "Ambattur", "Pudhukottai", "Nagercoil", "Mysore", "Shimoga", "Krishnagiri", "Madurai 2", "Rajapalayam", "Arani", "Namakkal"];
+    const targetGroups = ["Sales Man/Girl", "Floor Manager", "Showroom Trainer", "Appraiser", "IC/PC", "Cashier", "Level Manager", "Back Office", "Security & Valet", "Pantry", "HK", "CRE"];
+
+    let masterData = {
+      managers: oldManagers.map((m, i) => ({ id: i, name: m, username: m.split(' ').slice(-1)[0] === 'N' || m.split(' ').slice(-1)[0] === 'P' || m.split(' ').slice(-1)[0] === 'K' || m.split(' ').slice(-1)[0] === 'Y' || m.split(' ').slice(-1)[0] === 'J' ? m.split(' ')[1].toLowerCase() : m.replace(/mr\.|ms\./i, '').trim().split(' ')[0].toLowerCase(), password: (m.split(' ').slice(-1)[0] === 'N' || m.split(' ').slice(-1)[0] === 'P' || m.split(' ').slice(-1)[0] === 'K' || m.split(' ').slice(-1)[0] === 'Y' || m.split(' ').slice(-1)[0] === 'J' ? m.split(' ')[1].toLowerCase() : m.replace(/mr\.|ms\./i, '').trim().split(' ')[0].toLowerCase()) + '123' })).map(m => { if (m.name === 'MR.VENKATA SUBBA RAO') { m.username = 'venkata'; m.password = 'venkata123'; } return m; }),
+      hod: { name: 'HOD', username: 'hod', password: 'hod@2024' },
+      showrooms: oldShowrooms,
+      regions: ["ROTN", "ROTAP", "ROTKK", "HO"],
+      venues: ["Training Hub - Hyderabad", "Training Hub - Mayavaram", "Training Hub - Vizag", "Training Hub - Tirupati", "Training Hub - RR Nagar", "Training Hub - Chennai", "L&D Hall 1", "L&D Hall 2", "Meeting Room", "Showroom Live Room"],
+      topics: ["Induction", "Induction - Day 1", "Induction - Day 2", "Induction - Day 3", "Buddy Trainers Learning Series", "Buddy Training Audit", "Buddy Process Orientation", "Product Training - Gold", "Product Training - Diamond", "Product Training - Silver", "Product Knowledge - Oriana", "Product Knowledge - Bangles", "JPP Calculation", "JPP Enrollment Techniques", "Selling Skills", "Customer Service", "Customer Service SOP", "Customer Service SOP - Cashier & Appraiser", "Customer Handling", "Greeting & Fond Farewell", "Offer & Campaign Communication", "Advance Collection on Orders", "Leadership", "Floor Manager Responsibility", "Task Management & Prioritization", "Team Coordination", "Softskills", "Communication Skills", "Positive Body Language", "Grooming & Etiquette - GRT Standards", "Motivation & Attitude", "Workplace Respect & Culture", "SOP Compliance", "Visual Merchandising / Visual Impact", "Counter Hygiene & Display Standards", "Showroom Briefing Process", "Circular Communication Process", "Dipstick Assessment", "Teach-Back Session", "Grooming Audit", "Visual Impact Audit", "Morning Briefing", "Campaign Briefing", "Refresher Training", "Skill Based Training", "Custom / Ad-hoc Topic"]
+    };
+
+    let database = [];
+    let visitReports = [];
+    let currentUser = null;
+    let currentLoginRole = 'manager';
+
+    // ─── LOGIN ────────────────────────────────────────────────────────
+    function setLoginRole(role, el) {
+      currentLoginRole = role;
+      document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const hints = {
+        manager: 'Enter your first name as username (e.g. ashokan) · password: firstname123',
+        hod: 'Username: hod · Password: hod@2024',
+        admin: 'Username: admin · Password: admin123'
+      };
+      document.getElementById('loginHint').innerText = hints[role];
+      document.getElementById('userLogin').value = '';
+      document.getElementById('passLogin').value = '';
+    }
+
+    function attemptLogin() {
+      const u = document.getElementById('userLogin').value.toLowerCase().trim();
+      const p = document.getElementById('passLogin').value;
+      currentUser = null;
+
+      if (currentLoginRole === 'admin') {
+        if (u === 'admin' && p === 'admin123') currentUser = { name: "ADMIN", role: "admin" };
+      } else if (currentLoginRole === 'hod') {
+        if (u === masterData.hod.username.toLowerCase() && p === masterData.hod.password) currentUser = { name: masterData.hod.name, role: "hod" };
+        else if (u === 'hod' && p === 'hod@2024') currentUser = { name: masterData.hod.name, role: "hod" }; // fallback
+      } else {
+        const found = masterData.managers.find(m => m.username.toLowerCase() === u);
+        if (found && found.password === p) {
+          currentUser = { name: found.name, username: found.username, role: "manager" };
+        } else {
+          // Backward compatibility fallback for dynamically typed old names
+          const oldFound = masterData.managers.find(m => m.name.toLowerCase().replace(/[\.\s]/g, '').includes(u.replace(/[\.\s]/g, '')));
+          if (oldFound) {
+            const nk = oldFound.name.toLowerCase().replace(/[\.\s]/g, '');
+            if (p === u + '123' || p === nk + '123') currentUser = { name: oldFound.name, username: oldFound.username, role: "manager" };
+          }
+        }
+      }
+
+      if (currentUser) {
+        localStorage.setItem('ld_auth_session', JSON.stringify(currentUser));
+        launch();
+      } else {
+        alert('Invalid credentials. Please check your username and password.');
+      }
+    }
+
+    function logout() { localStorage.removeItem('ld_auth_session'); location.reload(); }
+
+    // ─── LAUNCH ───────────────────────────────────────────────────────
+    function launch() {
+      const saved = localStorage.getItem('ld_auth_session');
+      if (!saved) return;
+      currentUser = JSON.parse(saved);
+
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('appContent').style.display = 'block';
+
+      const icons = { admin: ' 🛡', hod: ' 👔', manager: '' };
+      document.getElementById('navUser').innerText = currentUser.name + (icons[currentUser.role] || '');
+      document.getElementById('p_mgr_fixed').value = currentUser.name;
+      document.getElementById('t_mgr_fixed').value = currentUser.name;
+      document.getElementById('vr_mgr').value = currentUser.name;
+
+      // Nav visibility
+      const isPrivileged = currentUser.role === 'hod' || currentUser.role === 'admin';
+      ['nl-hod', 'nl-perf', 'nl-admin'].forEach(id => {
+        document.getElementById(id).style.display = isPrivileged ? '' : 'none';
+      });
+
+      loadData();
+      popUI();
+      renderAll();
+
+      if (currentUser.role === 'admin') {
+        document.getElementById('adminLock').classList.add('hidden');
+        document.getElementById('adminUI').classList.remove('hidden');
+        updAdmin();
+        showTabByName('admin');
+      } else if (currentUser.role === 'hod') {
+        document.getElementById('adminLock').classList.add('hidden');
+        document.getElementById('adminUI').classList.remove('hidden');
+        updAdmin();
+        populateHODFilters();
+        renderHOD();
+        renderPerf();
+        showTabByName('hod');
+      } else {
+        showTabByName('planner');
+      }
+    }
+
+    // ─── DATA PERSISTENCE ─────────────────────────────────────────────
+    async function loadAllData() {
+      const { data: mData } = await supabase.from('ld_master').select('config').eq('id', 1).single();
+      if (mData) masterData = mData.config;
+
+      const { data: eData } = await supabase.from('ld_entries').select('data');
+      if (eData) database = eData.map(d => d.data);
+
+      const { data: rData } = await supabase.from('ld_reports').select('data');
+      if (rData) visitReports = rData.map(d => d.data);
+
+      popUI();
+    }
+
+    async function syncData() {
+      for (const item of database) {
+        await supabase.from('ld_entries').upsert({ id: item.id, data: item });
+      }
+      renderAll();
+    }
+
+    async function syncReports() {
+      for (const report of visitReports) {
+        await supabase.from('ld_reports').upsert({ id: report.id, data: report });
+      }
+    }
+
+    async function syncMasterData() {
+      await supabase.from('ld_master').upsert({ id: 1, config: masterData });
+      popUI();
+      renderMasterTable();
+    }
+
+    // ─── POPULATE UI ─────────────────────────────────────────────────
+    function popUI() {
+      const pRoom = document.getElementById('p_room'); if (!pRoom) return;
+      pRoom.innerHTML = '';
+      const vrRoom = document.getElementById('vr_showroom'); vrRoom.innerHTML = '';
+      const tRoom = document.getElementById('t_showroom'); tRoom.innerHTML = '';
+      const mLoc = document.getElementById('master-filter-loc'); if (mLoc) mLoc.innerHTML = '<option value="">All Locations</option>';
+      const hc = [...masterData.showrooms];
+      const headIdx = hc.indexOf("Head Office");
+      if (headIdx > -1) hc.splice(headIdx, 1);
+      const sorted = ["Head Office", ...hc.sort()];
+      sorted.forEach(s => {
+        pRoom.add(new Option(s, s));
+        vrRoom.add(new Option(s, s));
+        tRoom.add(new Option(s, s));
+        if (mLoc) mLoc.add(new Option(s, s));
+      });
+
+      const vrRegion = document.getElementById('vr_region'); vrRegion.innerHTML = '';
+      masterData.regions.forEach(r => vrRegion.add(new Option(r, r)));
+
+      const tTopic = document.getElementById('t_topic'); tTopic.innerHTML = '';
+      masterData.topics.forEach(t => tTopic.add(new Option(t, t)));
+
+      const tVenue = document.getElementById('t_venue'); tVenue.innerHTML = '';
+      masterData.venues.forEach(v => tVenue.add(new Option(v, v)));
+
+      const targetGroups = ["Sales Man/Girl", "Floor Manager", "Showroom Trainer", "Appraiser", "IC/PC", "Cashier", "Level Manager", "Back Office", "Security & Valet", "Pantry", "HK", "CRE"];
+      const catBox = document.getElementById('t_cats_box');
+      if (catBox) catBox.innerHTML = targetGroups.map(c => `<label class="cat-item"><input type="checkbox" name="t_cat" value="${c}"><span>${c}</span></label>`).join('');
+
+      document.getElementById('wallMonth').value = new Date().toISOString().slice(0, 7);
+      const ts = document.getElementById('t_start_time'), te = document.getElementById('t_end_time');
+      for (let h = 7; h <= 20; h++) {
+        const lbl = (h > 12 ? h - 12 : h) + (h >= 12 ? ':00 PM' : ':00 AM');
+        ts.add(new Option(lbl, h)); te.add(new Option(lbl, h));
+      }
+
+      initReportForm();
+    }
+
+    // ─── OVERLAP DETECTION ────────────────────────────────────────────
+    function isOverlap(s1, e1, s2, e2) {
+      return new Date(s1) <= new Date(e2) && new Date(s2) <= new Date(e1);
+    }
+
+    function findStoreConflicts(store, fromDate, toDate, excludeId) {
+      return database.filter(x =>
+        x.id !== excludeId &&
+        x.loc === store &&
+        isOverlap(fromDate, toDate, x.from, x.to)
+      );
+    }
+
+    function formatConflictDetails(conflicts) {
+      return conflicts.map(c =>
+        `• ${c.type} by ${c.mgr}\n  ${c.from}${c.to !== c.from ? ' → ' + c.to : ''} | ${c.topic}`
+      ).join('\n');
+    }
+
+    function isPrivileged() {
+      return currentUser && (currentUser.role === 'hod' || currentUser.role === 'admin');
+    }
+
+    // ─── SUBMIT TRAVEL ────────────────────────────────────────────────
+    async function submitVisit() {
+      const f = document.getElementById('p_from').value;
+      const t = document.getElementById('p_to').value;
+      const r = document.getElementById('p_room').value;
+      if (!f || !t) return alert('Please select From and To dates.');
+      if (new Date(t) < new Date(f)) return alert('To Date cannot be earlier than From Date.');
+
+      const conflicts = findStoreConflicts(r, f, t, null);
+
+      if (conflicts.length > 0) {
+        const details = formatConflictDetails(conflicts);
+        if (!isPrivileged()) {
+          alert(`⛔ SCHEDULING CONFLICT\n\n"${r}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nManagers cannot override conflicts.`);
+          return;
+        } else {
+          const override = confirm(`⚠️ CONFLICT DETECTED — Override?\n\n"${r}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nClick OK to force-schedule.`);
+          if (!override) return;
+        }
+      }
+
+      database.push({
+        id: Date.now(), type: 'Visit', from: f, to: t,
+        mgr: currentUser.name, loc: r,
+        topic: document.getElementById('p_purp').value,
+        mode: document.getElementById('p_mode').value,
+        h: document.getElementById('p_h').value,
+        t_s: document.getElementById('p_t').value,
+        app: 'No',
+        overridden: conflicts.length > 0
+      });
+      await syncData();
+      alert('✅ Travel itinerary submitted');
+    }
+
+    // ─── SUBMIT TRAINING ─────────────────────────────────────────────
+    async function submitTraining() {
+      const f = document.getElementById('t_from').value;
+      const t = document.getElementById('t_to').value;
+      const v = document.getElementById('t_venue').value;
+      const store = document.getElementById('t_showroom').value;
+      const sT = document.getElementById('t_start_time').selectedOptions[0].text;
+      const eT = document.getElementById('t_end_time').selectedOptions[0].text;
+      if (!f || !t) return alert('Please select From and To dates.');
+      if (new Date(t) < new Date(f)) return alert('To Date cannot be earlier than From Date.');
+
+      const conflicts = findStoreConflicts(store, f, t, null);
+
+      if (conflicts.length > 0) {
+        const details = formatConflictDetails(conflicts);
+        if (!isPrivileged()) {
+          alert(`⛔ SCHEDULING CONFLICT\n\n"${store}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nManagers cannot override conflicts.`);
+          return;
+        } else {
+          const override = confirm(`⚠️ CONFLICT DETECTED — Override?\n\n"${store}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nClick OK to force-schedule.`);
+          if (!override) return;
+        }
+      }
+
+      const cats = [...document.querySelectorAll('input[name=t_cat]:checked')].map(c => c.value);
+      database.push({
+        id: Date.now(), type: 'Training', from: f, to: t,
+        sTime: sT, eTime: eT,
+        mgr: currentUser.name, loc: store, venue: v,
+        topic: document.getElementById('t_topic').value,
+        cats, remarks: document.getElementById('t_remarks').value,
+        app: 'No',
+        overridden: conflicts.length > 0
+      });
+      await syncData();
+      alert('✅ Training scheduled');
+      showTabByName('master');
+    }
+
+    // ─── VISIT REPORT DYNAMIC ROWS ───────────────────────────────────
+    const groomingCategories = [
+      'Sales Staff (Men)', 'Sales Staff (Women)', 'Security / Valet',
+      'Back Office', 'Cashier / Appraiser / JPS', 'Floor Managers', 'Level Managers'
+    ];
+    const complianceItems = [
+      'Daily Briefing taken', 'Communication of Circulars', 'Trainings in Showroom',
+      'Cleanliness - Counter Hygiene', 'Greeting of Customers', 'Positive Body Language',
+      'Offers Seat to Customer', 'Staff carry a smile at all times',
+      'Showroom opens on Time', 'Condition of the counter articles',
+      'Offer Water / Beverages to Customers', 'Sides / Tea / Coffee Served to Staff',
+      'Fond Farewell to Customers'
+    ];
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    function initReportForm() {
+      const gb = document.getElementById('vr_grooming_body');
+      if (!gb) return;
+      gb.innerHTML = groomingCategories.map((cat, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${cat}</td>
+      <td><input type="number" id="vr_groom_score_${i}" min="1" max="10" placeholder="1-10" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+      <td><input type="number" id="vr_groom_count_${i}" min="0" placeholder="0" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+      <td><input type="text" id="vr_groom_lacunae_${i}" placeholder="e.g. Unshaven male staff" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+      <td><input type="text" id="vr_groom_correction_${i}" placeholder="e.g. Instructed to adhere to GRT standards" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    </tr>`).join('');
+
+      const cg = document.getElementById('vr_compliance_grid');
+      cg.innerHTML = complianceItems.map((item, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f8f9fa;border-radius:6px;border:1px solid #eee;">
+      <span style="font-size:11px;font-weight:600;color:#444;flex:1;">${i + 1}. ${item}</span>
+      <select id="vr_comp_${i}" style="width:70px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:11px;font-weight:700;">
+        <option value="FC" style="color:green;">FC</option>
+        <option value="PC" style="color:orange;">PC</option>
+        <option value="NC" style="color:red;">NC</option>
+      </select>
+    </div>`).join('');
+
+      document.getElementById('vr_sessions_body').innerHTML = '';
+      for (let i = 0; i < 3; i++) addSessionRow();
+      document.getElementById('vr_needs_body').innerHTML = '';
+      for (let i = 0; i < 3; i++) addNeedRow();
+      document.getElementById('vr_buddy_body').innerHTML = '';
+      for (let i = 0; i < 2; i++) addBuddyRow();
+      document.getElementById('vr_awards_body').innerHTML = '';
+      addAwardRow();
+      document.getElementById('vr_fblog_body').innerHTML = '';
+      addFbLogRow();
+    }
+
+    let sessionRowCount = 0;
+    function addSessionRow() {
+      const n = ++sessionRowCount;
+      const tbody = document.getElementById('vr_sessions_body');
+      const rowNum = tbody.rows.length + 1;
+      const tr = document.createElement('tr');
+      tr.id = 'srow_' + n;
+      tr.innerHTML = `
+    <td>${rowNum}</td>
+    <td><input type="text" id="sess_topic_${n}" placeholder="e.g. JPP Calculation" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="date" id="sess_date_${n}" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><select id="sess_day_${n}" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;">${days.map(d => `<option>${d}</option>`).join('')}</select></td>
+    <td><input type="number" id="sess_pax_${n}" min="0" placeholder="0" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><select id="sess_type_${n}" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"><option>CLT</option><option>SFT</option><option>EL</option></select></td>
+    <td><button onclick="this.closest('tr').remove()" style="background:#ffebee;border:none;border-radius:4px;color:#c62828;cursor:pointer;padding:4px 8px;font-size:11px;">✕</button></td>`;
+      tbody.appendChild(tr);
+      document.getElementById('sess_date_' + n).addEventListener('change', function () {
+        const d = new Date(this.value);
+        if (!isNaN(d)) document.getElementById('sess_day_' + n).value = days[d.getDay() === 0 ? 6 : d.getDay() - 1];
+      });
+    }
+
+    let needRowCount = 0;
+    function addNeedRow() {
+      const n = ++needRowCount;
+      const tbody = document.getElementById('vr_needs_body');
+      const rowNum = tbody.rows.length + 1;
+      const tr = document.createElement('tr');
+      tr.id = 'need_row_' + n;
+      tr.innerHTML = `
+    <td>${rowNum}</td>
+    <td><input type="text" id="need_topic_${n}" placeholder="Training need..." style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><select id="need_priority_${n}" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"><option>Low</option><option>Medium</option><option>High</option></select></td>
+    <td><input type="text" id="need_tat_${n}" placeholder="e.g. 2 weeks" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><select id="need_cat_${n}" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"><option>Product</option><option>Process</option><option>People</option></select></td>
+    <td><input type="text" id="need_shared_${n}" placeholder="Shared by..." style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><button onclick="this.closest('tr').remove()" style="background:#ffebee;border:none;border-radius:4px;color:#c62828;cursor:pointer;padding:4px 8px;font-size:11px;">✕</button></td>`;
+      tbody.appendChild(tr);
+    }
+
+    let buddyRowCount = 0;
+    function addBuddyRow() {
+      const n = ++buddyRowCount;
+      const tbody = document.getElementById('vr_buddy_body');
+      const rowNum = tbody.rows.length + 1;
+      const tr = document.createElement('tr');
+      tr.id = 'buddy_row_' + n;
+      tr.innerHTML = `
+    <td>${rowNum}</td>
+    <td><input type="text" id="buddy_name_${n}" placeholder="Buddy name" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="date" id="buddy_doj_${n}" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="buddy_empid_${n}" placeholder="Emp ID" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="buddy_dept_${n}" placeholder="Sub Dept" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="number" id="buddy_level_${n}" min="1" max="10" step="0.5" placeholder="e.g. 4.5" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="buddy_trainer_${n}" placeholder="Trainer name" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="buddy_comments_${n}" placeholder="e.g. Buddy Audit Completed" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><button onclick="this.closest('tr').remove()" style="background:#ffebee;border:none;border-radius:4px;color:#c62828;cursor:pointer;padding:4px 8px;font-size:11px;">✕</button></td>`;
+      tbody.appendChild(tr);
+    }
+
+    let awardRowCount = 0;
+    function addAwardRow() {
+      const n = ++awardRowCount;
+      const tbody = document.getElementById('vr_awards_body');
+      const rowNum = tbody.rows.length + 1;
+      const tr = document.createElement('tr');
+      tr.id = 'award_row_' + n;
+      tr.innerHTML = `
+    <td>${rowNum}</td>
+    <td><input type="text" id="aw_month_${n}" placeholder="e.g. March" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="aw_size_${n}" placeholder="Size" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="aw_counter_${n}" placeholder="Counter" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="aw_desc_${n}" placeholder="Description" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="date" id="aw_date_${n}" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><button onclick="this.closest('tr').remove()" style="background:#ffebee;border:none;border-radius:4px;color:#c62828;cursor:pointer;padding:4px 8px;font-size:11px;">✕</button></td>`;
+      tbody.appendChild(tr);
+    }
+
+    let fbLogRowCount = 0;
+    function addFbLogRow() {
+      const n = ++fbLogRowCount;
+      const tbody = document.getElementById('vr_fblog_body');
+      const rowNum = tbody.rows.length + 1;
+      const tr = document.createElement('tr');
+      tr.id = 'fblog_row_' + n;
+      tr.innerHTML = `
+    <td>${rowNum}</td>
+    <td><input type="text" id="fbl_subject_${n}" placeholder="Mail subject" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="fbl_staff_${n}" placeholder="Staff details" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="date" id="fbl_date_${n}" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="fbl_comments_${n}" placeholder="Comments" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><select id="fbl_nature_${n}" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"><option>Positive</option><option>Neutral</option><option>Negative</option></select></td>
+    <td><input type="text" id="fbl_related_${n}" placeholder="Related to" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><input type="text" id="fbl_remarks_${n}" placeholder="Remarks" style="width:100%;border:1px solid #eee;border-radius:4px;padding:5px;font-size:12px;"></td>
+    <td><button onclick="this.closest('tr').remove()" style="background:#ffebee;border:none;border-radius:4px;color:#c62828;cursor:pointer;padding:4px 8px;font-size:11px;">✕</button></td>`;
+      tbody.appendChild(tr);
+    }
+
+    // ─── SUBMIT VISIT REPORT ─────────────────────────────────────────
+    async function submitVisitReport() {
+      const fromDate = document.getElementById('vr_from').value;
+      const toDate = document.getElementById('vr_to').value;
+      const showroom = document.getElementById('vr_showroom').value;
+      if (!fromDate || !toDate) return alert('Please select From and To dates.');
+
+      const sessions = [];
+      document.querySelectorAll('#vr_sessions_body tr').forEach((tr, i) => {
+        const n = tr.id?.replace('srow_', '') || (i + 1);
+        const topic = document.getElementById('sess_topic_' + n)?.value;
+        if (topic) sessions.push({ topic, date: document.getElementById('sess_date_' + n)?.value, day: document.getElementById('sess_day_' + n)?.value, pax: document.getElementById('sess_pax_' + n)?.value, type: document.getElementById('sess_type_' + n)?.value });
+      });
+
+      const grooming = groomingCategories.map((cat, i) => ({
+        category: cat,
+        score: document.getElementById('vr_groom_score_' + i)?.value,
+        count: document.getElementById('vr_groom_count_' + i)?.value,
+        lacunae: document.getElementById('vr_groom_lacunae_' + i)?.value,
+        correction: document.getElementById('vr_groom_correction_' + i)?.value
+      }));
+
+      const compliance = complianceItems.map((item, i) => ({ item, status: document.getElementById('vr_comp_' + i)?.value || 'FC' }));
+
+      const needs = [];
+      document.querySelectorAll('#vr_needs_body tr').forEach((tr, i) => {
+        const n = tr.id?.replace('need_row_', '') || (i + 1);
+        const topic = document.getElementById('need_topic_' + n)?.value || tr.querySelector('input')?.value;
+        if (topic) needs.push({ topic, priority: document.getElementById('need_priority_' + n)?.value, tat: document.getElementById('need_tat_' + n)?.value, category: document.getElementById('need_cat_' + n)?.value, sharedBy: document.getElementById('need_shared_' + n)?.value });
+      });
+
+      const buddies = [];
+      document.querySelectorAll('#vr_buddy_body tr').forEach((tr, i) => {
+        const n = tr.id?.replace('buddy_row_', '') || (i + 1);
+        const name = document.getElementById('buddy_name_' + n)?.value;
+        if (name) buddies.push({ name, doj: document.getElementById('buddy_doj_' + n)?.value, empId: document.getElementById('buddy_empid_' + n)?.value, dept: document.getElementById('buddy_dept_' + n)?.value, level: document.getElementById('buddy_level_' + n)?.value, trainer: document.getElementById('buddy_trainer_' + n)?.value, comments: document.getElementById('buddy_comments_' + n)?.value });
+      });
+
+      const awards = [];
+      document.querySelectorAll('#vr_awards_body tr').forEach((tr, i) => {
+        const n = tr.id?.replace('award_row_', '') || (i + 1);
+        const month = document.getElementById('aw_month_' + n)?.value;
+        if (month) awards.push({ month, size: document.getElementById('aw_size_' + n)?.value, counter: document.getElementById('aw_counter_' + n)?.value, desc: document.getElementById('aw_desc_' + n)?.value, date: document.getElementById('aw_date_' + n)?.value });
+      });
+
+      const fbLog = [];
+      document.querySelectorAll('#vr_fblog_body tr').forEach((tr, i) => {
+        const n = tr.id?.replace('fblog_row_', '') || (i + 1);
+        const subject = document.getElementById('fbl_subject_' + n)?.value;
+        if (subject) fbLog.push({ subject, staff: document.getElementById('fbl_staff_' + n)?.value, date: document.getElementById('fbl_date_' + n)?.value, comments: document.getElementById('fbl_comments_' + n)?.value, nature: document.getElementById('fbl_nature_' + n)?.value, relatedTo: document.getElementById('fbl_related_' + n)?.value, remarks: document.getElementById('fbl_remarks_' + n)?.value });
+      });
+
+      const report = {
+        id: Date.now(),
+        mgr: currentUser.name,
+        date: fromDate,
+        from: fromDate, to: toDate,
+        showroom,
+        region: document.getElementById('vr_region').value,
+        agm: document.getElementById('vr_agm').value,
+        l1Mgr: document.getElementById('vr_l1mgr').value,
+        trainers: document.getElementById('vr_trainers').value,
+        sessions,
+        grooming,
+        feedback: {
+          google: { mechanism: document.getElementById('vr_fb1_mech').value, score: document.getElementById('vr_fb1_score').value, count: document.getElementById('vr_fb1_count').value, pos: document.getElementById('vr_fb1_pos').value, neu: document.getElementById('vr_fb1_neu').value, neg: document.getElementById('vr_fb1_neg').value },
+          mail: { mechanism: document.getElementById('vr_fb2_mech').value, score: document.getElementById('vr_fb2_score').value, count: document.getElementById('vr_fb2_count').value, pos: document.getElementById('vr_fb2_pos').value, neu: document.getElementById('vr_fb2_neu').value, neg: document.getElementById('vr_fb2_neg').value },
+          interaction: { mechanism: document.getElementById('vr_fb3_mech').value, score: document.getElementById('vr_fb3_score').value, count: document.getElementById('vr_fb3_count').value, pos: document.getElementById('vr_fb3_pos').value, neu: document.getElementById('vr_fb3_neu').value, neg: document.getElementById('vr_fb3_neg').value },
+        },
+        compliance,
+        complianceComments: document.getElementById('vr_compliance_comments').value,
+        observations: { product: document.getElementById('vr_obs_product').value, process: document.getElementById('vr_obs_process').value, people: document.getElementById('vr_obs_people').value, training: document.getElementById('vr_obs_training').value },
+        trainingNeeds: needs,
+        buddies,
+        awards,
+        feedbackLog: fbLog,
+        overallFeedback: document.getElementById('vr_overall_feedback').value,
+        submittedAt: new Date().toISOString()
+      };
+
+      visitReports.push(report);
+      await syncReports();
+      renderAll();
+      alert('✅ Visit Report submitted successfully!');
+      showReportSubtab('list');
+    }
+
+    // ─── REPORT DISPLAY ───────────────────────────────────────────────
+    function showReportSubtab(sub) {
+      document.getElementById('rsubtab-new').classList.toggle('hidden', sub !== 'new');
+      document.getElementById('rsubtab-list').classList.toggle('hidden', sub !== 'list');
+      const activeStyle = 'padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:var(--primary);color:white;';
+      const inactiveStyle = 'padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:#eee;color:#555;';
+      document.getElementById('rsubtab-new-btn').style.cssText = sub === 'new' ? activeStyle : inactiveStyle;
+      document.getElementById('rsubtab-list-btn').style.cssText = sub === 'list' ? activeStyle : inactiveStyle;
+      if (sub === 'list') renderReportList('reportListWrap', currentUser.role === 'manager' ? currentUser.name : null);
+    }
+
+    function renderReportList(wrapId, filterMgr) {
+      const wrap = document.getElementById(wrapId);
+      if (!wrap) return;
+      const reports = filterMgr ? visitReports.filter(r => r.mgr === filterMgr) : visitReports;
+      if (!reports.length) { wrap.innerHTML = '<p style="color:#999;text-align:center;padding:30px">No visit reports found.</p>'; return; }
+      wrap.innerHTML = [...reports].reverse().map(r => {
+        const compFC = (r.compliance || []).filter(c => c.status === 'FC').length;
+        const compPC = (r.compliance || []).filter(c => c.status === 'PC').length;
+        const compNC = (r.compliance || []).filter(c => c.status === 'NC').length;
+        const sessions = r.sessions || [];
+        const totalPax = sessions.reduce((s, x) => s + (parseInt(x.pax) || 0), 0);
+        const buddies = r.buddies || [];
+        const needs = r.trainingNeeds || [];
+        return `
+    <div class="report-card">
+      <div class="report-card-header">
+        <div>
+          <div class="report-card-title">📋 ${r.showroom} &nbsp;|&nbsp; ${r.from}${r.to && r.to !== r.from ? ' → ' + r.to : ''}</div>
+          <div class="report-card-meta">By: <b>${r.mgr}</b> &nbsp;|&nbsp; Region: ${r.region || '—'} &nbsp;|&nbsp; AGM: ${r.agm || '—'} &nbsp;|&nbsp; L1 Mgr: ${r.l1Mgr || '—'}</div>
+          <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge" style="background:#e3f2fd;color:#1a237e;">${sessions.length} Sessions · ${totalPax} pax</span>
+            <span class="badge" style="background:#e8f5e9;color:#1b5e20;">${compFC} FC</span>
+            ${compPC > 0 ? `<span class="badge" style="background:#fff3e0;color:#e65100;">${compPC} PC</span>` : ''}
+            ${compNC > 0 ? `<span class="badge" style="background:#ffebee;color:#c62828;">${compNC} NC</span>` : ''}
+            ${buddies.length > 0 ? `<span class="badge" style="background:#f3e5f5;color:#6a1b9a;">${buddies.length} Buddies</span>` : ''}
+            ${needs.length > 0 ? `<span class="badge" style="background:#fff8e1;color:#f57f17;">${needs.length} Training Needs</span>` : ''}
+          </div>
+        </div>
+        <button class="report-expand-btn" onclick="toggleReportDetail(${r.id})">View ▾</button>
+      </div>
+      <div id="rd-${r.id}" class="hidden" style="border-top:1px solid #eee;padding-top:14px;margin-top:8px;font-size:12px;">
+        ${r.trainers ? `<div style="margin-bottom:10px;"><b>Showroom Trainers:</b> ${r.trainers.replace(/\n/g, '<br>')}</div>` : ''}
+        ${sessions.length ? `
+        <div style="margin-bottom:12px;">
+          <b style="display:block;margin-bottom:6px;">🎓 Training Sessions Delivered</b>
+          <table><thead><tr><th>#</th><th>Topic</th><th>Date</th><th>Day</th><th>Participants</th><th>Type</th></tr></thead>
+          <tbody>${sessions.map((s, i) => `<tr><td>${i + 1}</td><td>${s.topic}</td><td>${s.date || '—'}</td><td>${s.day || '—'}</td><td>${s.pax || '—'}</td><td>${s.type || '—'}</td></tr>`).join('')}</tbody></table>
+        </div>`: ''}
+        ${(r.grooming || []).some(g => g.score) ? `
+        <div style="margin-bottom:12px;">
+          <b style="display:block;margin-bottom:6px;">👔 Staff Grooming</b>
+          <table><thead><tr><th>Category</th><th>Score</th><th>Staff Checked</th><th>Lacunae</th><th>Course Correction</th></tr></thead>
+          <tbody>${(r.grooming || []).filter(g => g.score).map(g => `<tr><td>${g.category}</td><td>${g.score}/10</td><td>${g.count || '—'}</td><td>${g.lacunae || '—'}</td><td>${g.correction || '—'}</td></tr>`).join('')}</tbody></table>
+        </div>`: ''}
+        <div style="margin-bottom:12px;">
+          <b style="display:block;margin-bottom:6px;">💬 Customer Feedback</b>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            ${[r.feedback?.google, r.feedback?.mail, r.feedback?.interaction].filter(f => f && f.count).map(f => `
+            <div style="background:#f8f9fa;padding:10px;border-radius:6px;flex:1;min-width:180px;">
+              <div style="font-weight:700;margin-bottom:4px;">${f.mechanism}</div>
+              <div>Rating: <b>${f.score || '—'}</b> &nbsp; Count: <b>${f.count}</b></div>
+              <div style="color:green;">✔ ${f.pos || 0}</div><div style="color:orange;">→ ${f.neu || 0}</div><div style="color:red;">✕ ${f.neg || 0}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <b style="display:block;margin-bottom:6px;">✅ Compliance Checklist</b>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">${(r.compliance || []).map(c => `
+            <span style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${c.status === 'FC' ? '#e8f5e9' : c.status === 'PC' ? '#fff3e0' : '#ffebee'};color:${c.status === 'FC' ? '#1b5e20' : c.status === 'PC' ? '#e65100' : '#c62828'};">${c.item}: ${c.status}</span>`).join('')}
+          </div>
+          ${r.complianceComments ? `<div style="margin-top:6px;color:#666;">${r.complianceComments}</div>` : ''}
+        </div>
+        ${(r.observations?.product || r.observations?.process || r.observations?.people || r.observations?.training) ? `
+        <div style="margin-bottom:12px;">
+          <b style="display:block;margin-bottom:6px;">🔍 Observations Made</b>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            ${r.observations?.product ? `<div><b>Product:</b> ${r.observations.product}</div>` : ''}
+            ${r.observations?.process ? `<div><b>Process:</b> ${r.observations.process}</div>` : ''}
+            ${r.observations?.people ? `<div><b>People:</b> ${r.observations.people}</div>` : ''}
+            ${r.observations?.training ? `<div><b>Training:</b> ${r.observations.training}</div>` : ''}
+          </div>
+        </div>`: ''}
+        ${needs.length ? `
+        <div style="margin-bottom:12px;">
+          <b style="display:block;margin-bottom:6px;">📌 Training Needs</b>
+          <table><thead><tr><th>Need</th><th>Priority</th><th>TAT</th><th>Category</th><th>Shared By</th></tr></thead>
+          <tbody>${needs.map(n => `<tr><td>${n.topic}</td><td><span style="color:${n.priority === 'High' ? 'red' : n.priority === 'Medium' ? 'orange' : 'green'};font-weight:700;">${n.priority}</span></td><td>${n.tat || '—'}</td><td>${n.category || '—'}</td><td>${n.sharedBy || '—'}</td></tr>`).join('')}</tbody></table>
+        </div>`: ''}
+        ${buddies.length ? `
+        <div style="margin-bottom:12px;">
+          <b style="display:block;margin-bottom:6px;">🤝 Buddy Training Audit</b>
+          <table><thead><tr><th>Name</th><th>DOJ</th><th>Emp ID</th><th>Knowledge Level</th><th>Trainer</th><th>Comments</th></tr></thead>
+          <tbody>${buddies.map(b => `<tr><td>${b.name}</td><td>${b.doj || '—'}</td><td>${b.empId || '—'}</td><td>${b.level || '—'}</td><td>${b.trainer || '—'}</td><td>${b.comments || '—'}</td></tr>`).join('')}</tbody></table>
+        </div>`: ''}
+        ${r.overallFeedback ? `<div style="margin-bottom:8px;background:#f8f9fa;padding:12px;border-radius:6px;border-left:3px solid var(--primary);"><b>📝 Overall Feedback:</b><br>${r.overallFeedback.replace(/\n/g, '<br>')}</div>` : ''}
+      </div>
+    </div>`;
+      }).join('');
+    }
+
+    function toggleReportDetail(id) {
+      const el = document.getElementById('rd-' + id);
+      el.classList.toggle('hidden');
+    }
+
+    // ─── RENDER ALL ───────────────────────────────────────────────────
+    let travelPage = 0; let trainingPage = 0;
+    function nextRecentTravelPage() { travelPage++; renderRecent(); }
+    function nextRecentTrainingPage() { trainingPage++; renderRecent(); }
+
+    function renderRecent() {
+      if (!currentUser) return;
+      const tTb = document.querySelector('#recentTravelTable tbody');
+      const trTb = document.querySelector('#recentTrainingTable tbody');
+      if (!tTb || !trTb) return;
+
+      const myTravel = database.filter(d => d.type === 'Visit' && d.mgr === currentUser.name).sort((a, b) => b.id - a.id);
+      const myTrain = database.filter(d => d.type === 'Training' && d.mgr === currentUser.name).sort((a, b) => b.id - a.id);
+
+      if (myTravel.length && travelPage * 5 >= myTravel.length) travelPage = 0;
+      if (myTrain.length && trainingPage * 5 >= myTrain.length) trainingPage = 0;
+
+      let tShow = myTravel.slice(travelPage * 5, travelPage * 5 + 5);
+      tTb.innerHTML = tShow.map(i => `<tr><td>${i.from}</td><td>${i.to}</td><td>${i.loc}</td><td>${i.topic}</td><td><span style="padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;background:${i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : 'rgba(255,165,0,0.2)'};color:${i.app === 'Yes' ? '#4ade80' : '#fbbf24'}">${i.app === 'Yes' ? 'Approved' : 'Pending'}</span></td></tr>`).join('');
+      document.getElementById('travelPageInfo').innerText = myTravel.length ? `Showing ${travelPage * 5 + 1}-${Math.min(travelPage * 5 + 5, myTravel.length)} of ${myTravel.length}` : 'No entries';
+
+      let trShow = myTrain.slice(trainingPage * 5, trainingPage * 5 + 5);
+      trTb.innerHTML = trShow.map(i => `<tr><td>${i.from} to ${i.to}</td><td>${i.topic}</td><td>${i.loc}</td><td>${i.venue || '—'}</td><td><span style="padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;background:${i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : 'rgba(255,165,0,0.2)'};color:${i.app === 'Yes' ? '#4ade80' : '#fbbf24'}">${i.app === 'Yes' ? 'Approved' : 'Pending'}</span></td></tr>`).join('');
+      document.getElementById('trainingPageInfo').innerText = myTrain.length ? `Showing ${trainingPage * 5 + 1}-${Math.min(trainingPage * 5 + 5, myTrain.length)} of ${myTrain.length}` : 'No entries';
+    }
+
+    function renderAll() {
+      const tb = document.querySelector('#masterTable tbody'); if (tb) tb.innerHTML = '';
+      const mLocFilter = document.getElementById('master-filter-loc')?.value || '';
+      const mDateFilter = document.getElementById('master-filter-date')?.value || '';
+
+      if (tb) {
+        database.filter(item => {
+          if (mLocFilter && item.loc !== mLocFilter) return false;
+          if (mDateFilter && (mDateFilter < item.from || mDateFilter > item.to)) return false;
+          return true;
+        }).sort((a, b) => new Date(a.from) - new Date(b.from)).forEach(item => {
+          const tr = tb.insertRow();
+          tr.className = item.app === 'Yes' ? 'color-approved' : 'color-pending';
+          const time = item.type === 'Training' ? `<br><small>${item.sTime} - ${item.eTime}</small>` : '';
+          const overrideFlag = item.overridden ? ' <span title="Conflict overridden by HOD/Admin" style="color:#e65100;font-size:10px;">⚠️OVR</span>' : '';
+          const locDisplay = item.venue && item.venue !== item.loc ? `${item.loc}<br><small style="color:#888">${item.venue}</small>` : item.loc;
+          tr.innerHTML = `<td>${item.from} to ${item.to}${time}</td><td>${locDisplay}</td><td>${item.mgr}</td><td>${item.topic}${overrideFlag}</td><td><span style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;display:inline-block;background:${item.app === 'Yes' ? 'rgba(0,255,128,0.2)' : 'rgba(255,165,0,0.2)'};color:${item.app === 'Yes' ? '#4ade80' : '#fbbf24'}">${item.app === 'Yes' ? '✔ Approved' : '⏳ Pending'}</span></td><td>🏨${item.h === 'B' ? '✔' : '—'} ✈${item.t_s === 'B' ? '✔' : '—'}</td>`;
+        });
+      }
+      renderRecent();
+      renderWall();
+      if (currentUser && (currentUser.role === 'hod' || currentUser.role === 'admin')) {
+        populateHODFilters(); renderHOD(); renderPerf(); updAdmin();
+        renderReportList('adminReportListWrap', null);
+      }
+    }
+
+    // ─── WALL ─────────────────────────────────────────────────────────
+    function renderWall() {
+      const gridTravel = document.getElementById('wallGridTravel');
+      const gridTraining = document.getElementById('wallGridTraining');
+      if (gridTravel) gridTravel.innerHTML = '';
+      if (gridTraining) gridTraining.innerHTML = '';
+
+      const monthInput = document.getElementById('wallMonth');
+      if (!monthInput || !monthInput.value) return;
+
+      const [y, m] = monthInput.value.split('-').map(Number);
+      const days = new Date(y, m, 0).getDate();
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+      dayNames.forEach(d => {
+        const createHeaderRow = () => { const h = document.createElement('div'); h.style.cssText = 'background:rgba(255,255,255,0.05);color:var(--text-muted);padding:8px 6px;text-align:center;font-size:11px;font-weight:800;border-radius:6px;border-bottom:2px solid var(--primary);'; h.innerText = d; return h; };
+        if (gridTravel) gridTravel.appendChild(createHeaderRow());
+        if (gridTraining) gridTraining.appendChild(createHeaderRow());
+      });
+
+      const firstDay = new Date(y, m - 1, 1).getDay();
+      for (let i = 0; i < firstDay; i++) {
+        const createEmptyDay = () => { const e = document.createElement('div'); e.className = 'calendar-day'; e.style.opacity = '0.3'; return e; };
+        if (gridTravel) gridTravel.appendChild(createEmptyDay());
+        if (gridTraining) gridTraining.appendChild(createEmptyDay());
+      }
+
+      for (let d = 1; d <= days; d++) {
+        const cur = `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+
+        const divTravel = document.createElement('div'); divTravel.className = 'calendar-day';
+        divTravel.innerHTML = `<span class="calendar-day-num">${d}</span>`;
+
+        const divTraining = document.createElement('div'); divTraining.className = 'calendar-day';
+        divTraining.innerHTML = `<span class="calendar-day-num">${d}</span>`;
+
+        database.forEach(e => {
+          if (new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
+            if (e.type === 'Visit') {
+              divTravel.innerHTML += `<div class="cal-entry entry-visit">${e.loc} - ${e.mgr.split(' ').slice(1).join(' ') || e.mgr}</div>`;
+            } else if (e.type === 'Training') {
+              divTraining.innerHTML += `<div class="cal-entry entry-trg">${e.topic || '—'} - ${e.venue || e.loc}</div>`;
+            }
+          }
+        });
+
+        visitReports.forEach(r => {
+          if (new Date(cur) >= new Date(r.from) && new Date(cur) <= new Date(r.to)) {
+            divTravel.innerHTML += `<div class="cal-entry entry-report">📋 ${r.showroom} - ${r.mgr.split(' ').slice(1).join(' ') || r.mgr}</div>`;
+          }
+        });
+
+        if (gridTravel) gridTravel.appendChild(divTravel);
+        if (gridTraining) gridTraining.appendChild(divTraining);
+      }
+    }
+
+    function downloadWallPDF() {
+      const element = document.getElementById('pdf-export-container');
+      const monthInput = document.getElementById('wallMonth');
+      let monthLabel = 'Calendar';
+      if (monthInput && monthInput.value) {
+        const [y, m] = monthInput.value.split('-');
+        const date = new Date(y, m - 1, 1);
+        monthLabel = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        document.getElementById('travel-title').innerText = `✈ Travel Entries - ${monthLabel}`;
+        document.getElementById('training-title').innerText = `🎓 Training Entries - ${monthLabel}`;
+      } else {
+        document.getElementById('travel-title').innerText = `✈ Travel Entries`;
+        document.getElementById('training-title').innerText = `🎓 Training Entries`;
+      }
+
+      const opt = {
+        margin: 10,
+        filename: `Executive_Wall_${monthLabel.replace(' ', '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+      };
+
+      const btn = event.currentTarget || document.activeElement;
+      const originalText = btn.innerText;
+      if (btn) btn.innerText = '⏳ Generating...';
+
+      html2pdf().from(element).set(opt).save().then(() => {
+        if (btn) btn.innerText = originalText;
+      });
+    }
+
+    // ─── TAB ROUTING ─────────────────────────────────────────────────
+    function showTabByName(t) {
+      document.querySelectorAll('.tab-content').forEach(c => { c.classList.remove('active-tab'); });
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      const tab = document.getElementById('tab-' + t);
+      if (tab) tab.classList.add('active-tab');
+      const nl = document.getElementById('nl-' + t);
+      if (nl) nl.classList.add('active');
+    }
+
+    // ─── ADMIN ────────────────────────────────────────────────────────
+    function showAdminSub(sub, el) {
+      ['entries', 'reports', 'bot', 'master'].forEach(s => {
+        document.getElementById('adminsub-' + s).classList.toggle('hidden', s !== sub);
+      });
+      document.querySelectorAll('.admin-subtab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      if (sub === 'reports') renderReportList('adminReportListWrap', null);
+      if (sub === 'master') changeMasterTab('managers', document.querySelector('.mbtn.active') || document.querySelector('.mbtn'));
+    }
+
+    // ─── MASTER DATA MANAGEMENT ────────────────────────────────────────
+    let currentMasterSub = 'managers';
+
+    function changeMasterTab(cat, btnEl) {
+      currentMasterSub = cat;
+      document.querySelectorAll('.btn.mbtn').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'rgba(255,255,255,0.05)';
+        b.style.color = 'var(--text-muted)';
+      });
+      btnEl.classList.add('active');
+      btnEl.style.background = 'var(--primary)';
+      btnEl.style.color = 'white';
+
+      const titles = {
+        managers: 'Managers & Logins',
+        hod: 'HOD Login Details',
+        showrooms: 'Showrooms Locations',
+        regions: 'Showroom Regions',
+        venues: 'Training Venues',
+        topics: 'Training Topics'
+      };
+
+      document.getElementById('masterTitle').innerText = titles[cat];
+
+      const ctr = document.getElementById('masterControls');
+      if (cat === 'hod') {
+        ctr.innerHTML = '';
+      } else {
+        const ph = cat === 'managers' ? 'New Manager Name' : 'New ' + cat.slice(0, -1);
+        let extraInput = '';
+        if (cat === 'managers') extraInput = `<input type="text" id="mstrAddUser" placeholder="Username" style="width:120px;padding:6px;"><input type="text" id="mstrAddPass" placeholder="Password" style="width:120px;padding:6px;">`;
+        ctr.innerHTML = `
+          ${cat === 'managers' && false ? '' : `<input type="text" id="mstrAddVal" placeholder="${cat === 'managers' ? 'Name' : ph}" style="flex:1;min-width:150px;padding:6px;">`}
+          ${extraInput}
+          <button class="btn btn-primary" onclick="addMasterRow()" style="padding:7px 14px">+ Add</button>
+        `;
+      }
+
+      renderMasterTable();
+    }
+
+    function renderMasterTable() {
+      const thead = document.getElementById('masterThead');
+      const tbody = document.getElementById('masterTbody');
+      tbody.innerHTML = '';
+
+      if (currentMasterSub === 'hod') {
+        thead.innerHTML = '<th style="padding:10px;text-align:left">Role</th><th style="padding:10px;text-align:left">Name</th><th style="padding:10px;text-align:left">Username</th><th style="padding:10px;text-align:left">Password</th><th style="padding:10px">Actions</th>';
+        const h = masterData.hod;
+        tbody.innerHTML = `<tr style="border-bottom:1px solid #ddd;">
+           <td style="padding:10px">HOD</td><td style="padding:10px">${h.name}</td><td style="padding:10px">${h.username}</td><td style="padding:10px">****</td>
+           <td style="padding:10px;text-align:center"><button onclick="editHOD()" style="background:#ff9800;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer">✏ Edit HOD</button></td>
+         </tr>`;
+        return;
+      }
+
+      if (currentMasterSub === 'managers') {
+        thead.innerHTML = '<th style="padding:10px;text-align:left">Name</th><th style="padding:10px;text-align:left">Username</th><th style="padding:10px;text-align:left">Password</th><th style="padding:10px">Actions</th>';
+        masterData.managers.forEach((m, idx) => {
+          tbody.innerHTML += `<tr style="border-bottom:1px solid #ddd;">
+             <td style="padding:10px">${m.name}</td><td style="padding:10px">${m.username}</td><td style="padding:10px">${m.password}</td>
+             <td style="padding:10px;text-align:center;white-space:nowrap;">
+               <button onclick="editManager(${idx})" style="background:#ff9800;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;margin-right:4px;">✏</button>
+               <button onclick="deleteMasterItem(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">🗑</button>
+             </td>
+           </tr>`;
+        });
+        return;
+      }
+
+      thead.innerHTML = '<th style="padding:10px;text-align:left">Name / Value</th><th style="padding:10px;width:120px;text-align:center">Actions</th>';
+      masterData[currentMasterSub].forEach((item, idx) => {
+        tbody.innerHTML += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+             <td style="padding:10px">${item}</td>
+             <td style="padding:10px;text-align:center;white-space:nowrap;">
+               <button onclick="editArrayItem(${idx})" style="background:#ff9800;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;margin-right:4px;">✏</button>
+               <button onclick="deleteMasterItem(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">🗑</button>
+             </td>
+           </tr>`;
+      });
+    }
+
+    async function addMasterRow() {
+      if (currentMasterSub === 'managers') {
+        const nm = document.getElementById('mstrAddVal').value.trim();
+        const usr = document.getElementById('mstrAddUser').value.trim();
+        const pwd = document.getElementById('mstrAddPass').value.trim();
+        if (!nm || !usr || !pwd) return alert('Fill name, username, and password.');
+        masterData.managers.push({ name: nm, username: usr, password: pwd });
+      } else {
+        const val = document.getElementById('mstrAddVal').value.trim();
+        if (!val) return alert('Enter a value to add.');
+        masterData[currentMasterSub].push(val);
+      }
+      await syncMasterData();
+    }
+
+    async function deleteMasterItem(idx) {
+      if (!confirm('Are you sure you want to delete this item?')) return;
+      if (currentMasterSub === 'managers') {
+        masterData.managers.splice(idx, 1);
+      } else {
+        masterData[currentMasterSub].splice(idx, 1);
+      }
+      await syncMasterData();
+    }
+
+    async function editManager(idx) {
+      const m = masterData.managers[idx];
+      const nm = prompt('Manager Name:', m.name);
+      if (nm === null) return;
+      const usr = prompt('Login Username:', m.username);
+      if (usr === null) return;
+      const pwd = prompt('Login Password:', m.password);
+      if (pwd === null) return;
+      masterData.managers[idx] = { name: nm.trim() || m.name, username: usr.trim() || m.username, password: pwd.trim() || m.password };
+      await syncMasterData();
+    }
+
+    async function editHOD() {
+      const nm = prompt('HOD Name:', masterData.hod.name);
+      if (nm === null) return;
+      const usr = prompt('HOD Login Username:', masterData.hod.username);
+      if (usr === null) return;
+      const pwd = prompt('HOD Login Password:', masterData.hod.password);
+      if (pwd === null) return;
+      masterData.hod = { name: nm.trim() || masterData.hod.name, username: usr.trim() || masterData.hod.username, password: pwd.trim() || masterData.hod.password };
+      await syncMasterData();
+    }
+
+    async function editArrayItem(idx) {
+      const old = masterData[currentMasterSub][idx];
+      const nw = prompt('Edit value:', old);
+      if (nw !== null && nw.trim() !== '') {
+        masterData[currentMasterSub][idx] = nw.trim();
+        await syncMasterData();
+      }
+    }
+
+    function updAdmin() {
+      const tb = document.querySelector('#adminTable tbody');
+      tb.innerHTML = database.map((x, i) => `
+    <tr>
+      <td><span class="badge ${x.type === 'Visit' ? 'badge-visit' : x.type === 'Training' ? 'badge-train' : 'badge-report'}">${x.type}</span></td>
+      <td>${x.from}${x.to && x.to !== x.from ? '<br>→' + x.to : ''}</td>
+      <td>${x.mgr}</td><td>${x.loc}</td><td>${x.topic || '—'}</td>
+      <td><b style="color:${x.app === 'Yes' ? 'green' : 'crimson'}">${x.app === 'Yes' ? '✔ Approved' : '⏳ Pending'}</b></td>
+      <td>
+        <button onclick="delEntry(${x.id})" style="background:red;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px">Del</button>
+        <button onclick="apprEntry(${i})" style="padding:4px 8px;border-radius:4px;cursor:pointer;background:${x.app === 'Yes' ? '#ff9800' : '#388e3c'};color:white;border:none">${x.app === 'Yes' ? 'Revoke' : 'Approve'}</button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px">No entries yet</td></tr>';
+    }
+
+    async function delEntry(id) { database = database.filter(x => x.id !== id); await syncData(); updAdmin(); renderAll(); }
+    async function apprEntry(idx) { database[idx].app = (database[idx].app === 'Yes' ? 'No' : 'Yes'); await syncData(); updAdmin(); renderAll(); }
+
+    // ─── HOD DASHBOARD ────────────────────────────────────────────────
+    function populateHODFilters() {
+      const sel = document.getElementById('hod-filter-mgr');
+      sel.innerHTML = '<option value="">All Managers</option>';
+      const seen = new Set();
+      database.forEach(x => { if (!seen.has(x.mgr)) { seen.add(x.mgr); sel.add(new Option(x.mgr, x.mgr)); } });
+      masterData.managers.map(m => m.name).forEach(m => { if (!seen.has(m)) { seen.add(m); sel.add(new Option(m, m)); } });
+    }
+
+    function renderHOD() {
+      const typeF = document.getElementById('hod-filter-type').value;
+      const mgrF = document.getElementById('hod-filter-mgr').value;
+      const statusF = document.getElementById('hod-filter-status').value;
+
+      const combined = [
+        ...database,
+        ...visitReports.map(r => ({ id: r.id, type: 'Report', from: r.from, to: r.to, mgr: r.mgr, loc: r.showroom, topic: 'Visit Report', app: '—', h: 'P', t_s: 'P' }))
+      ];
+
+      const filtered = combined.filter(x =>
+        (!typeF || x.type === typeF) &&
+        (!mgrF || x.mgr === mgrF) &&
+        (!statusF || x.app === statusF)
+      ).sort((a, b) => new Date(a.from) - new Date(b.from));
+
+      const statBase = combined.filter(x => (!typeF || x.type === typeF) && (!mgrF || x.mgr === mgrF));
+      document.getElementById('hod-stat-total').innerText = 'Total: ' + statBase.length;
+      document.getElementById('hod-stat-approved').innerText = 'Approved: ' + statBase.filter(x => x.app === 'Yes').length;
+      document.getElementById('hod-stat-pending').innerText = 'Pending: ' + statBase.filter(x => x.app === 'No').length;
+
+      const tb = document.getElementById('hodTableBody'); tb.innerHTML = '';
+      const empty = document.getElementById('hod-empty');
+      if (!filtered.length) { empty.classList.remove('hidden'); document.getElementById('hodTable').style.display = 'none'; return; }
+      empty.classList.add('hidden'); document.getElementById('hodTable').style.display = '';
+
+      filtered.forEach((x, i) => {
+        const tr = tb.insertRow();
+        const typeBadge = x.type === 'Visit' ? '<span class="badge badge-visit">✈ Travel</span>' : x.type === 'Training' ? '<span class="badge badge-train">🎓 Training</span>' : '<span class="badge badge-report">📋 Report</span>';
+        const statusBadge = x.app === 'Yes' ? '<span class="badge badge-ok">✔ Approved</span>' : x.app === 'No' ? '<span class="badge badge-pend">⏳ Pending</span>' : '<span class="badge" style="background:#eee;color:#555;">—</span>';
+        const time = (x.type === 'Training' && x.sTime) ? `${x.sTime} – ${x.eTime}` : '—';
+        const hotel = x.type === 'Visit' ? (x.h === 'B' ? '🏨 Yes' : '🏨 No') : '—';
+        const travel = x.type === 'Visit' ? (x.t_s === 'B' ? '✈ Yes' : '✈ No') : '—';
+        tr.innerHTML = `<td style="color:#999">${i + 1}</td><td>${typeBadge}</td><td style="font-weight:800;color:var(--primary)">${x.mgr}</td><td>${x.from}</td><td>${x.to || x.from}</td><td>${x.loc}</td><td>${x.topic || '—'}</td><td style="color:#555">${time}</td><td style="font-size:11px">${hotel} &nbsp;${travel}</td><td>${statusBadge}</td>`;
+      });
+    }
+
+    // ─── PERFORMANCE DASHBOARD ────────────────────────────────────────
+    function renderPerf() {
+      const period = document.getElementById('perf-filter-period').value;
+      const now = new Date();
+      const inPeriod = (dateStr) => {
+        const d = new Date(dateStr);
+        if (period === 'all') return true;
+        if (period === 'thismonth') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        if (period === 'lastmonth') { const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1); return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear(); }
+        if (period === 'thisyear') return d.getFullYear() === now.getFullYear();
+        return true;
+      };
+
+      const summary = document.getElementById('perf-summary');
+      const grid = document.getElementById('perf-grid');
+      grid.innerHTML = ''; summary.innerHTML = '';
+
+      const totalVisits = database.filter(x => x.type === 'Visit' && inPeriod(x.from)).length;
+      const totalTraining = database.filter(x => x.type === 'Training' && inPeriod(x.from)).length;
+      const totalReports = visitReports.filter(r => inPeriod(r.date)).length;
+      const totalApproved = database.filter(x => x.app === 'Yes' && inPeriod(x.from)).length;
+
+      const summaryItems = [
+        { label: 'Total Travels', val: totalVisits, color: '#1a237e' },
+        { label: 'Total Trainings', val: totalTraining, color: '#6a1b9a' },
+        { label: 'Visit Reports', val: totalReports, color: '#00695c' },
+        { label: 'Approved', val: totalApproved, color: '#1b5e20' },
+        { label: 'Team Size', val: masterData.managers.length, color: '#e65100' },
+      ];
+      summary.innerHTML = summaryItems.map(s => `
+    <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;text-align:center;border-top:3px solid ${s.color};border:1px solid rgba(255,255,255,0.1)">
+      <div style="font-size:28px;font-weight:900;color:${s.color}">${s.val}</div>
+      <div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-top:4px">${s.label}</div>
+    </div>`).join('');
+
+      const maxVisits = Math.max(1, ...masterData.managers.map(mObj => database.filter(x => x.type === 'Visit' && x.mgr === mObj.name && inPeriod(x.from)).length));
+      const maxTraining = Math.max(1, ...masterData.managers.map(mObj => database.filter(x => x.type === 'Training' && x.mgr === mObj.name && inPeriod(x.from)).length));
+      const maxReports = Math.max(1, ...masterData.managers.map(mObj => visitReports.filter(r => r.mgr === mObj.name && inPeriod(r.date)).length));
+
+      masterData.managers.forEach(mObj => {
+        const mgr = mObj.name;
+        const visits = database.filter(x => x.type === 'Visit' && x.mgr === mgr && inPeriod(x.from)).length;
+        const trainings = database.filter(x => x.type === 'Training' && x.mgr === mgr && inPeriod(x.from)).length;
+        const reports = visitReports.filter(r => r.mgr === mgr && inPeriod(r.date)).length;
+        const approved = database.filter(x => x.mgr === mgr && x.app === 'Yes' && inPeriod(x.from)).length;
+        const total = visits + trainings;
+        const avgRating = reports > 0 ? (visitReports.filter(r => r.mgr === mgr && inPeriod(r.date)).reduce((sum, r) => {
+          let fbScores = [];
+          if (r.feedback) {
+            if (r.feedback.google && parseFloat(r.feedback.google.score)) fbScores.push(parseFloat(r.feedback.google.score));
+            if (r.feedback.mail && parseFloat(r.feedback.mail.score)) fbScores.push(parseFloat(r.feedback.mail.score));
+            if (r.feedback.interaction && parseFloat(r.feedback.interaction.score)) fbScores.push(parseFloat(r.feedback.interaction.score));
+          }
+          return sum + (fbScores.length ? fbScores.reduce((a, b) => a + b, 0) / fbScores.length : 0);
+        }, 0) / reports).toFixed(1) : '—';
+
+        const div = document.createElement('div');
+        div.className = 'perf-card';
+        div.innerHTML = `
+      <div class="perf-name">${mgr}</div>
+      <div class="perf-bar-wrap">
+        <div class="perf-bar-label"><span>✈ Travel Visits</span><span>${visits}</span></div>
+        <div class="perf-bar"><div class="perf-bar-fill" style="width:${(visits / maxVisits * 100)}%;background:#1a237e"></div></div>
+      </div>
+      <div class="perf-bar-wrap">
+        <div class="perf-bar-label"><span>🎓 Trainings Conducted</span><span>${trainings}</span></div>
+        <div class="perf-bar"><div class="perf-bar-fill" style="width:${(trainings / maxTraining * 100)}%;background:#6a1b9a"></div></div>
+      </div>
+      <div class="perf-bar-wrap">
+        <div class="perf-bar-label"><span>📋 Visit Reports</span><span>${reports}</span></div>
+        <div class="perf-bar"><div class="perf-bar-fill" style="width:${(reports / maxReports * 100)}%;background:#00695c"></div></div>
+      </div>
+      <div class="perf-stats">
+        <div class="perf-stat"><div class="perf-stat-val">${total}</div><div class="perf-stat-lbl">Activities</div></div>
+        <div class="perf-stat"><div class="perf-stat-val">${approved}</div><div class="perf-stat-lbl">Approved</div></div>
+        <div class="perf-stat"><div class="perf-stat-val" style="font-size:13px">${avgRating}</div><div class="perf-stat-lbl">Avg Rating</div></div>
+      </div>`;
+        grid.appendChild(div);
+      });
+    }
+
+    // ─── AI BOT ───────────────────────────────────────────────────────
+    function buildReportContext() {
+      if (!visitReports.length) return 'No visit reports have been submitted yet.';
+      return visitReports.map(r => {
+        const sessions = (r.sessions || []).filter(s => s.topic).map(s => `${s.topic}(${s.pax || 0} pax,${s.type || 'CLT'})`).join('; ');
+        const grooming = (r.grooming || []).filter(g => g.score).map(g => `${g.category}:${g.score}/10`).join(', ');
+        const compNC = (r.compliance || []).filter(c => c.status === 'NC').map(c => c.item).join(', ');
+        const compPC = (r.compliance || []).filter(c => c.status === 'PC').map(c => c.item).join(', ');
+        const needs = (r.trainingNeeds || []).filter(n => n.topic).map(n => `${n.topic}[${n.priority}]`).join('; ');
+        const buddies = (r.buddies || []).filter(b => b.name).map(b => `${b.name}(Level:${b.level})`).join(', ');
+        const googleFb = r.feedback?.google;
+        return `Report[${r.from}${r.to && r.to !== r.from ? ' to ' + r.to : ''}] Manager:${r.mgr} Showroom:${r.showroom} Region:${r.region || '?'} AGM:${r.agm || '?'} L1Mgr:${r.l1Mgr || '?'} Sessions:[${sessions || 'none'}] Grooming:[${grooming || 'none'}] GoogleReview:${googleFb ? `${googleFb.score}/5 (${googleFb.count} reviews, ${googleFb.neg} negative)` : '?'} NC:[${compNC || 'none'}] PC:[${compPC || 'none'}] ObsProduct:${r.observations?.product || 'none'} ObsProcess:${r.observations?.process || 'none'} ObsPeople:${r.observations?.people || 'none'} ObsTraining:${r.observations?.training || 'none'} TrainingNeeds:[${needs || 'none'}] Buddies:[${buddies || 'none'}] OverallFeedback:${r.overallFeedback || 'none'}`;
+      }).join('\n');
+    }
+
+    async function sendBot() {
+      const input = document.getElementById('botInput');
+      const q = input.value.trim();
+      if (!q) return;
+      input.value = '';
+
+      addBotMsg(q, 'user');
+      const typingId = addBotTyping();
+
+      const context = buildReportContext();
+      const dbContext = `Travel entries: ${database.filter(x => x.type === 'Visit').length}, Training entries: ${database.filter(x => x.type === 'Training').length}, Managers: ${masterData.managers.map(m => m.name).join(', ')}`;
+
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': 'YOUR_API_KEY_HERE',
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1000,
+            system: `You are the L&D Visit Report AI Assistant for a jewellery retail chain. You have access to showroom visit report data submitted by regional L&D managers. Answer queries concisely and insightfully. Use bullet points where helpful. Focus on actionable insights.
+
+SYSTEM DATA:
+${dbContext}
+
+VISIT REPORTS DATA:
+${context}`,
+            messages: [{ role: 'user', content: q }]
+          })
+        });
+        const data = await res.json();
+        removeBotTyping(typingId);
+        const reply = data.content?.map(c => c.text || '').join('') || 'Sorry, I could not get a response.';
+        addBotMsg(reply, 'bot');
+      } catch (e) {
+        removeBotTyping(typingId);
+        addBotMsg('Error connecting to AI. Please try again.', 'bot');
+      }
+    }
+
+    function addBotMsg(text, type) {
+      const msgs = document.getElementById('botMsgs');
+      const div = document.createElement('div');
+      div.className = 'bot-msg ' + type;
+      div.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<em>$1</em>');
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    function addBotTyping() {
+      const msgs = document.getElementById('botMsgs');
+      const id = 'typing-' + Date.now();
+      const div = document.createElement('div');
+      div.className = 'bot-msg bot'; div.id = id;
+      div.innerHTML = '<div class="bot-typing"><span></span><span></span><span></span></div>';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return id;
+    }
+
+    function removeBotTyping(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    // ─── INIT ─────────────────────────────────────────────────────────
+    window.onload = function () {
+      if (localStorage.getItem('ld_auth_session')) launch();
+    };
+  </script>
+</body>
+
+</html>
