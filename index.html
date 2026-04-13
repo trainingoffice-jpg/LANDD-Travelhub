@@ -142,11 +142,7 @@
       transform: translateY(-2px);
     }
 
-    .login-hint {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 15px;
-    }
+
 
     /* ==== APP LAYOUT ==== */
     #appContent {
@@ -952,8 +948,7 @@
       </div>
       <input type="text" id="userLogin" placeholder="Username">
       <input type="password" id="passLogin" placeholder="Password" onkeydown="if(event.key==='Enter')attemptLogin()">
-      <button class="login-btn" onclick="attemptLogin()">ENTER SYSTEM</button>
-      <p class="login-hint" id="loginHint">Enter your first name as username (e.g. ashokan) · password: firstname123</p>
+      <button class="login-btn" id="loginEnterBtn" onclick="attemptLogin()" disabled>CONNECTING TO CLOUD...</button>
     </div>
   </div>
 
@@ -1644,16 +1639,16 @@
   <script>
     const SUPABASE_URL = 'https://dzipybscmmhhgikryhbo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6aXB5YnNjbW1oaGdpa3J5aGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNzMyMzksImV4cCI6MjA5MTY0OTIzOX0.nuG6oOPkywv7MbpcX6YXnHucsW240RucKLbMID57qmM';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const oldManagers = ["MR.ASHOKAN N", "MR.DEEPAK RAJ KUMAR K", "MR.GOKUL P", "MR.RAMALINGAM", "MR.KESAVAKUMAR", "MR.NILESH", "MR.SANTHOSH KUMAR Y", "MR.SRINIVASAN", "MR.SUBRAMANIAN P", "MR.VENKATA SUBBA RAO", "MR.VENKATESWARAN P", "MS.JEESHA MANOJ", "MS.HINDUJA", "MS.NANDHINI", "MR.RATHISH THAMBU J"];
-    const oldShowrooms = ["Head Office", "Tirupathy", "Usman Road", "Hosur", "Trichy", "Mayavaram", "Vijayawada", "Anna Nagar", "Royapuram", "Madurai", "Theni", "Singapore", "Poonamallee", "Hassan", "Malleshwaram", "Marathahalli", "R R Nagar", "Yelahanka", "Coimbatore", "OMR", "Avadi", "Chengalpet", "Purasaiwakkam", "Arakkonam", "Kancheepuram", "Nizamabad", "Mangesh Street", "Redhills", "Thiruvannamalai", "Villupuram", "Virudhachalam", "A S Rao Nagar", "Chanda Nagar", "Hyderabad", "Kukatpally", "Coats Road", "Perambur", "Jayanagar - O", "Salem", "Dharmapuri", "Erode", "Kumbakonam", "Thanjavur", "Nanganallur", "Thiruvallur", "Valasaravakkam", "Tirunelveli", "Tuticorin", "Valliyur", "Guduvancheri", "Vizianagaram", "Gajuwaka", "Guntur", "Kakinada", "Rajahmundry", "Vizag", "Madanapalle", "Anantapur", "Tambaram", "Bangalore", "K R Puram", "Kammanahalli", "Adyar", "Velacherry", "Anna Nagar -II", "Cuddalore", "Pondicherry", "Vellore", "Gachibowli", "Ashok Nagar", "Thiruvottiyur", "Ambattur", "Pudhukottai", "Nagercoil", "Mysore", "Shimoga", "Krishnagiri", "Madurai 2", "Rajapalayam", "Arani", "Namakkal"];
+    const oldManagers = [];
+    const oldShowrooms = [];
     const targetGroups = ["Sales Man/Girl", "Floor Manager", "Showroom Trainer", "Appraiser", "IC/PC", "Cashier", "Level Manager", "Back Office", "Security & Valet", "Pantry", "HK", "CRE"];
 
     let masterData = {
-      managers: oldManagers.map((m, i) => ({ id: i, name: m, username: m.split(' ').slice(-1)[0] === 'N' || m.split(' ').slice(-1)[0] === 'P' || m.split(' ').slice(-1)[0] === 'K' || m.split(' ').slice(-1)[0] === 'Y' || m.split(' ').slice(-1)[0] === 'J' ? m.split(' ')[1].toLowerCase() : m.replace(/mr\.|ms\./i, '').trim().split(' ')[0].toLowerCase(), password: (m.split(' ').slice(-1)[0] === 'N' || m.split(' ').slice(-1)[0] === 'P' || m.split(' ').slice(-1)[0] === 'K' || m.split(' ').slice(-1)[0] === 'Y' || m.split(' ').slice(-1)[0] === 'J' ? m.split(' ')[1].toLowerCase() : m.replace(/mr\.|ms\./i, '').trim().split(' ')[0].toLowerCase()) + '123' })).map(m => { if (m.name === 'MR.VENKATA SUBBA RAO') { m.username = 'venkata'; m.password = 'venkata123'; } return m; }),
+      managers: [],
       hod: { name: 'HOD', username: 'hod', password: 'hod@2024' },
-      showrooms: oldShowrooms,
+      showrooms: [],
       regions: ["ROTN", "ROTAP", "ROTKK", "HO"],
       venues: ["Training Hub - Hyderabad", "Training Hub - Mayavaram", "Training Hub - Vizag", "Training Hub - Tirupati", "Training Hub - RR Nagar", "Training Hub - Chennai", "L&D Hall 1", "L&D Hall 2", "Meeting Room", "Showroom Live Room"],
       topics: ["Induction", "Induction - Day 1", "Induction - Day 2", "Induction - Day 3", "Buddy Trainers Learning Series", "Buddy Training Audit", "Buddy Process Orientation", "Product Training - Gold", "Product Training - Diamond", "Product Training - Silver", "Product Knowledge - Oriana", "Product Knowledge - Bangles", "JPP Calculation", "JPP Enrollment Techniques", "Selling Skills", "Customer Service", "Customer Service SOP", "Customer Service SOP - Cashier & Appraiser", "Customer Handling", "Greeting & Fond Farewell", "Offer & Campaign Communication", "Advance Collection on Orders", "Leadership", "Floor Manager Responsibility", "Task Management & Prioritization", "Team Coordination", "Softskills", "Communication Skills", "Positive Body Language", "Grooming & Etiquette - GRT Standards", "Motivation & Attitude", "Workplace Respect & Culture", "SOP Compliance", "Visual Merchandising / Visual Impact", "Counter Hygiene & Display Standards", "Showroom Briefing Process", "Circular Communication Process", "Dipstick Assessment", "Teach-Back Session", "Grooming Audit", "Visual Impact Audit", "Morning Briefing", "Campaign Briefing", "Refresher Training", "Skill Based Training", "Custom / Ad-hoc Topic"]
@@ -1669,12 +1664,6 @@
       currentLoginRole = role;
       document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
       el.classList.add('active');
-      const hints = {
-        manager: 'Enter your first name as username (e.g. ashokan) · password: firstname123',
-        hod: 'Username: hod · Password: hod@2024',
-        admin: 'Username: admin · Password: admin123'
-      };
-      document.getElementById('loginHint').innerText = hints[role];
       document.getElementById('userLogin').value = '';
       document.getElementById('passLogin').value = '';
     }
@@ -1685,7 +1674,7 @@
       currentUser = null;
 
       if (currentLoginRole === 'admin') {
-        if (u === 'admin' && p === 'admin123') currentUser = { name: "ADMIN", role: "admin" };
+        if (u === 'admin' && p === 'Admin@2026') currentUser = { name: "ADMIN", role: "admin" };
       } else if (currentLoginRole === 'hod') {
         if (u === masterData.hod.username.toLowerCase() && p === masterData.hod.password) currentUser = { name: masterData.hod.name, role: "hod" };
         else if (u === 'hod' && p === 'hod@2024') currentUser = { name: masterData.hod.name, role: "hod" }; // fallback
@@ -1758,33 +1747,59 @@
 
     // ─── DATA PERSISTENCE ─────────────────────────────────────────────
     async function loadAllData() {
-      const { data: mData } = await supabase.from('ld_master').select('config').eq('id', 1).single();
-      if (mData) masterData = mData.config;
+      try {
+        const { data: mData } = await sb.from('ld_master').select('id,config').limit(1).single();
+        if (mData && mData.config) { masterData = mData.config; masterRowId = mData.id; }
 
-      const { data: eData } = await supabase.from('ld_entries').select('data');
-      if (eData) database = eData.map(d => d.data);
+        const { data: eData } = await sb.from('ld_entries').select('data');
+        if (eData) database = eData.map(d => d.data);
 
-      const { data: rData } = await supabase.from('ld_reports').select('data');
-      if (rData) visitReports = rData.map(d => d.data);
-
+        const { data: rData } = await sb.from('ld_reports').select('data');
+        if (rData) visitReports = rData.map(d => d.data);
+      } catch (err) {
+        console.error("Supabase Load Error:", err);
+      }
+      const btn = document.getElementById('loginEnterBtn');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'ENTER SYSTEM';
+      }
       popUI();
     }
 
     async function syncData() {
       for (const item of database) {
-        await supabase.from('ld_entries').upsert({ id: item.id, data: item });
+        await sb.from('ld_entries').upsert({ id: item.id, data: item });
       }
       renderAll();
     }
 
     async function syncReports() {
       for (const report of visitReports) {
-        await supabase.from('ld_reports').upsert({ id: report.id, data: report });
+        await sb.from('ld_reports').upsert({ id: report.id, data: report });
       }
     }
 
+    let masterRowId = null;
+
     async function syncMasterData() {
-      await supabase.from('ld_master').upsert({ id: 1, config: masterData });
+      const addBtn = document.getElementById('mstrSaveBtn') || document.querySelector('#masterControls .btn-primary');
+      if (addBtn) { const t = addBtn.innerText; addBtn.innerText = '☁️ Saving...'; setTimeout(() => addBtn.innerText = t, 2500); }
+
+      let error;
+      if (masterRowId) {
+        // Row exists — update it
+        ({ error } = await sb.from('ld_master').update({ config: masterData }).eq('id', masterRowId));
+      } else {
+        // First time — insert and capture the generated id
+        const result = await sb.from('ld_master').insert({ config: masterData }).select('id').single();
+        error = result.error;
+        if (result.data) masterRowId = result.data.id;
+      }
+
+      if (error) {
+        alert('Cloud Save Error: ' + error.message);
+      }
       popUI();
       renderMasterTable();
     }
@@ -2572,6 +2587,15 @@
       }
     }
 
+    function unlockAdmin() {
+      const p = document.getElementById('adminPass').value;
+      if (p === 'Admin@2026' || (currentUser && (currentUser.role === 'admin' || currentUser.role === 'hod'))) {
+        document.getElementById('adminLock').classList.add('hidden');
+        document.getElementById('adminUI').classList.remove('hidden');
+        updAdmin();
+      } else { alert('Wrong password.'); }
+    }
+
     function updAdmin() {
       const tb = document.querySelector('#adminTable tbody');
       tb.innerHTML = database.map((x, i) => `
@@ -2802,6 +2826,7 @@ ${context}`,
 
     // ─── INIT ─────────────────────────────────────────────────────────
     window.onload = function () {
+      loadAllData();
       if (localStorage.getItem('ld_auth_session')) launch();
     };
   </script>
