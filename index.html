@@ -1128,24 +1128,35 @@
     }
 
     async function backupToGoogleSheet(sheet, payload) {
-      if (!GOOGLE_SHEETS_BACKUP_URL) return;
+      if (!GOOGLE_SHEETS_BACKUP_URL) {
+        console.warn('No Google Sheets backup URL configured');
+        return;
+      }
       try {
-        await fetch(GOOGLE_SHEETS_BACKUP_URL, {
+        console.log('Sending backup to Google Sheets:', sheet, payload);
+        const response = await fetch(GOOGLE_SHEETS_BACKUP_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sheet, payload })
         });
+        const result = await response.json();
+        console.log('Google Sheets backup response:', result);
+        return result;
       } catch (err) {
-        console.warn('Google Sheets backup request failed:', err);
+        console.error('Google Sheets backup request failed:', err);
       }
     }
 
     async function backupEntriesToGoogleSheets() {
-      return backupToGoogleSheet('TravelAndTrainingEntries', database.map(item => ({ ...item })));
+      if (database.length === 0) return;
+      const recentEntries = database.slice(-5);
+      return backupToGoogleSheet('TravelAndTrainingEntries', recentEntries);
     }
 
     async function backupReportsToGoogleSheets() {
-      return backupToGoogleSheet('VisitReports', visitReports.map(report => ({ ...report })));
+      if (visitReports.length === 0) return;
+      const recentReports = visitReports.slice(-5);
+      return backupToGoogleSheet('VisitReports', recentReports);
     }
 
     let masterRowId = null;
@@ -1275,7 +1286,7 @@
         }
       }
 
-      database.push({
+      const newEntry = {
         id: Date.now(), type: 'Visit', from: f, to: t,
         mgr: currentUser.name, loc: r,
         topic: document.getElementById('p_purp').value,
@@ -1284,8 +1295,10 @@
         t_s: document.getElementById('p_t').value,
         app: 'No',
         overridden: conflicts.length > 0
-      });
+      };
+      database.push(newEntry);
       await syncData();
+      await backupToGoogleSheet('TravelAndTrainingEntries', [newEntry]);
       alert('✅ Travel itinerary submitted');
     }
 
@@ -1314,7 +1327,7 @@
       }
 
       const cats = [...document.querySelectorAll('input[name=t_cat]:checked')].map(c => c.value);
-      database.push({
+      const newEntry = {
         id: Date.now(), type: 'Training', from: f, to: t,
         sTime: sT, eTime: eT,
         mgr: currentUser.name, loc: store, venue: v,
@@ -1322,8 +1335,10 @@
         cats, remarks: document.getElementById('t_remarks').value,
         app: 'No',
         overridden: conflicts.length > 0
-      });
+      };
+      database.push(newEntry);
       await syncData();
+      await backupToGoogleSheet('TravelAndTrainingEntries', [newEntry]);
       alert('✅ Training scheduled');
       showTabByName('master');
     }
@@ -1559,6 +1574,7 @@
 
       visitReports.push(report);
       await syncReports();
+      await backupToGoogleSheet('VisitReports', [report]);
       renderAll();
       alert('✅ Visit Report submitted successfully!');
       showReportSubtab('list');
