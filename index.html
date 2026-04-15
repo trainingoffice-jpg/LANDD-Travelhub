@@ -1018,7 +1018,6 @@
       renderAll();
 
       const savedTab = localStorage.getItem('ld_current_tab');
-      const isPrivileged = currentUser.role === 'hod' || currentUser.role === 'admin';
       
       if (currentUser.role === 'admin') {
         document.getElementById('adminLock').classList.add('hidden');
