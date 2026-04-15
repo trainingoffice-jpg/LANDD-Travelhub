@@ -931,6 +931,7 @@
     const SUPABASE_URL = 'https://dzipybscmmhhgikryhbo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6aXB5YnNjbW1oaGdpa3J5aGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNzMyMzksImV4cCI6MjA5MTY0OTIzOX0.nuG6oOPkywv7MbpcX6YXnHucsW240RucKLbMID57qmM';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const GOOGLE_SHEETS_BACKUP_URL = 'https://script.google.com/macros/s/AKfycbzxAnFWOMSIDOFgvCBpay4yJc_6pfc5ZkPsVW6u1XuTm7uRzxB6ieeyAPrwENbfD-zNLQ/exec';
 
     const oldManagers = [];
     const oldShowrooms = [];
@@ -1116,12 +1117,35 @@
         await sb.from('ld_entries').upsert({ id: item.id, data: item });
       }
       renderAll();
+      backupEntriesToGoogleSheets().catch(err => console.warn('Google Sheets entries backup failed', err));
     }
 
     async function syncReports() {
       for (const report of visitReports) {
         await sb.from('ld_reports').upsert({ id: report.id, data: report });
       }
+      backupReportsToGoogleSheets().catch(err => console.warn('Google Sheets reports backup failed', err));
+    }
+
+    async function backupToGoogleSheet(sheet, payload) {
+      if (!GOOGLE_SHEETS_BACKUP_URL) return;
+      try {
+        await fetch(GOOGLE_SHEETS_BACKUP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sheet, payload })
+        });
+      } catch (err) {
+        console.warn('Google Sheets backup request failed:', err);
+      }
+    }
+
+    async function backupEntriesToGoogleSheets() {
+      return backupToGoogleSheet('TravelAndTrainingEntries', database.map(item => ({ ...item })));
+    }
+
+    async function backupReportsToGoogleSheets() {
+      return backupToGoogleSheet('VisitReports', visitReports.map(report => ({ ...report })));
     }
 
     let masterRowId = null;
