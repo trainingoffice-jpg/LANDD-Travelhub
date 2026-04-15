@@ -1775,7 +1775,34 @@
     async function loadAllData() {
       try {
         const { data: mData } = await sb.from('ld_master').select('id,config').limit(1).single();
-        if (mData && mData.config) { masterData = mData.config; masterRowId = mData.id; }
+        if (mData && mData.config) {
+          masterData = mData.config;
+          masterRowId = mData.id;
+
+          // ── Migrate old flat topics array to new categorized format ──
+          if (Array.isArray(masterData.topics) && masterData.topics.length > 0 && typeof masterData.topics[0] === 'string') {
+            masterData.topics = [
+              { category: "Induction", items: ["Induction", "Induction - Day 1", "Induction - Day 2", "Induction - Day 3"] },
+              { category: "Buddy Training", items: ["Buddy Trainers Learning Series", "Buddy Training Audit", "Buddy Process Orientation"] },
+              { category: "Product Knowledge", items: ["Product Training - Gold", "Product Training - Diamond", "Product Training - Silver", "Product Knowledge - Oriana", "Product Knowledge - Bangles", "JPP Calculation", "JPP Enrollment Techniques"] },
+              { category: "Sales & Customer Service", items: ["Selling Skills", "Customer Service", "Customer Service SOP", "Customer Service SOP - Cashier & Appraiser", "Customer Handling", "Greeting & Fond Farewell", "Offer & Campaign Communication", "Advance Collection on Orders"] },
+              { category: "Leadership & Management", items: ["Leadership", "Floor Manager Responsibility", "Task Management & Prioritization", "Team Coordination"] },
+              { category: "Softskills & Behavioural", items: ["Softskills", "Communication Skills", "Positive Body Language", "Grooming & Etiquette - GRT Standards", "Motivation & Attitude", "Workplace Respect & Culture"] },
+              { category: "SOP & Compliance", items: ["SOP Compliance", "Visual Merchandising / Visual Impact", "Counter Hygiene & Display Standards", "Showroom Briefing Process", "Circular Communication Process"] },
+              { category: "Assessments & Audits", items: ["Dipstick Assessment", "Teach-Back Session", "Grooming Audit", "Visual Impact Audit"] },
+              { category: "Other", items: ["Morning Briefing", "Campaign Briefing", "Refresher Training", "Skill Based Training", "Custom / Ad-hoc Topic"] }
+            ];
+            // Save migrated format back to Supabase automatically
+            setTimeout(() => syncMasterData(), 1500);
+          }
+
+          // ── Guard: ensure topics is a valid categorized array ──
+          if (!Array.isArray(masterData.topics) || !masterData.topics.length) {
+            masterData.topics = [
+              { category: "Other", items: ["Custom / Ad-hoc Topic"] }
+            ];
+          }
+        }
 
         const { data: eData } = await sb.from('ld_entries').select('data');
         if (eData) database = eData.map(d => d.data);
@@ -1852,12 +1879,21 @@
       masterData.regions.forEach(r => vrRegion.add(new Option(r, r)));
 
       const tTopic = document.getElementById('t_topic'); tTopic.innerHTML = '';
-      masterData.topics.forEach(catObj => {
-        const group = document.createElement('optgroup');
-        group.label = `--- ${catObj.category} ---`;
-        catObj.items.forEach(t => group.add(new Option(t, t)));
-        tTopic.add(group);
-      });
+      if (Array.isArray(masterData.topics) && masterData.topics.length) {
+        if (typeof masterData.topics[0] === 'string') {
+          // Fallback: old flat array
+          masterData.topics.forEach(t => tTopic.add(new Option(t, t)));
+        } else {
+          // New categorized format
+          masterData.topics.forEach(catObj => {
+            if (!catObj || !catObj.items) return;
+            const group = document.createElement('optgroup');
+            group.label = `--- ${catObj.category} ---`;
+            catObj.items.forEach(t => group.add(new Option(t, t)));
+            tTopic.add(group);
+          });
+        }
+      }
 
       const tVenue = document.getElementById('t_venue'); tVenue.innerHTML = '';
       masterData.venues.forEach(v => tVenue.add(new Option(v, v)));
