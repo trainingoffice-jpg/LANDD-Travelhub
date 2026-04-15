@@ -1028,7 +1028,6 @@
         document.getElementById(id).style.display = isPrivileged ? '' : 'none';
       });
 
-      loadData();
       popUI();
       renderAll();
 
@@ -1214,7 +1213,7 @@
             if (!catObj || !catObj.items) return;
             const group = document.createElement('optgroup');
             group.label = `--- ${catObj.category} ---`;
-            catObj.items.forEach(t => group.add(new Option(t, t)));
+            catObj.items.forEach(t => group.appendChild(new Option(t, t)));
             tTopic.add(group);
           });
         }
