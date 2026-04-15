@@ -1136,7 +1136,6 @@
         console.log('Sending backup to Google Sheets:', sheet, payload);
         const response = await fetch(GOOGLE_SHEETS_BACKUP_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sheet, payload })
         });
         const result = await response.json();
