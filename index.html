@@ -1017,11 +1017,13 @@
       popUI();
       renderAll();
 
+      const savedTab = localStorage.getItem('ld_current_tab');
+      const isPrivileged = currentUser.role === 'hod' || currentUser.role === 'admin';
+      
       if (currentUser.role === 'admin') {
         document.getElementById('adminLock').classList.add('hidden');
         document.getElementById('adminUI').classList.remove('hidden');
         updAdmin();
-        showTabByName('admin');
       } else if (currentUser.role === 'hod') {
         document.getElementById('adminLock').classList.add('hidden');
         document.getElementById('adminUI').classList.remove('hidden');
@@ -1029,9 +1031,17 @@
         populateHODFilters();
         renderHOD();
         renderPerf();
-        showTabByName('hod');
+      }
+
+      // Restore saved tab if valid and allowed
+      const privilegedTabs = ['hod', 'perf', 'admin'];
+      if (savedTab && (!privilegedTabs.includes(savedTab) || isPrivileged)) {
+        showTabByName(savedTab);
       } else {
-        showTabByName('planner');
+        // Fallbacks
+        if (currentUser.role === 'admin') showTabByName('admin');
+        else if (currentUser.role === 'hod') showTabByName('hod');
+        else showTabByName('planner');
       }
     }
 
@@ -1773,6 +1783,7 @@
       if (tab) tab.classList.add('active-tab');
       const nl = document.getElementById('nl-' + t);
       if (nl) nl.classList.add('active');
+      localStorage.setItem('ld_current_tab', t);
     }
 
     // ─── ADMIN ────────────────────────────────────────────────────────
