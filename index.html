@@ -293,6 +293,13 @@
               onclick="nextRecentTravelPage()">Next 5 ⏭</button>
           </div>
         </div>
+        <div class="card" style="margin-top:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+            <h2 style="margin:0;">🗓 Travel Calendar</h2>
+            <input type="month" id="travelMonth" onchange="renderTravelCalendar()" style="width:180px;">
+          </div>
+          <div id="travelCalendarGrid" class="calendar-grid"></div>
+        </div>
       </div>
 
       <!-- TRAINING ENTRY -->
@@ -346,6 +353,13 @@
             <button class="btn btn-purple" style="padding:6px 14px;font-size:11px;"
               onclick="nextRecentTrainingPage()">Next 5 ⏭</button>
           </div>
+        </div>
+        <div class="card" style="margin-top:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+            <h2 style="margin:0;">🗓 Training Calendar</h2>
+            <input type="month" id="trainingMonth" onchange="renderTrainingCalendar()" style="width:180px;">
+          </div>
+          <div id="trainingCalendarGrid" class="calendar-grid"></div>
         </div>
       </div>
 
@@ -1180,6 +1194,10 @@
       if (catBox) catBox.innerHTML = targetGroups.map(c => `<label class="cat-item"><input type="checkbox" name="t_cat" value="${c}"><span>${c}</span></label>`).join('');
 
       document.getElementById('wallMonth').value = new Date().toISOString().slice(0, 7);
+      const travelMonth = document.getElementById('travelMonth');
+      if (travelMonth) travelMonth.value = new Date().toISOString().slice(0, 7);
+      const trainingMonth = document.getElementById('trainingMonth');
+      if (trainingMonth) trainingMonth.value = new Date().toISOString().slice(0, 7);
       const ts = document.getElementById('t_start_time'), te = document.getElementById('t_end_time');
       for (let h = 7; h <= 20; h++) {
         const lbl = (h > 12 ? h - 12 : h) + (h >= 12 ? ':00 PM' : ':00 AM');
@@ -1683,6 +1701,8 @@
       }
       renderRecent();
       renderWall();
+      renderTravelCalendar();
+      renderTrainingCalendar();
       if (currentUser && (currentUser.role === 'hod' || currentUser.role === 'admin')) {
         populateHODFilters(); renderHOD(); renderPerf(); updAdmin();
         renderReportList('adminReportListWrap', null);
@@ -1745,6 +1765,55 @@
         if (gridTraining) gridTraining.appendChild(divTraining);
       }
     }
+
+    function renderMonthCalendar(monthInputId, gridId, typeFilter) {
+      const monthInput = document.getElementById(monthInputId);
+      const grid = document.getElementById(gridId);
+      if (!grid || !monthInput || !monthInput.value) return;
+      grid.innerHTML = '';
+
+      const [y, m] = monthInput.value.split('-').map(Number);
+      const days = new Date(y, m, 0).getDate();
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+      dayNames.forEach(d => {
+        const header = document.createElement('div');
+        header.style.cssText = 'background:rgba(240,245,255,0.8);color:var(--text-muted);padding:8px 6px;text-align:center;font-size:11px;font-weight:800;border-radius:6px;border-bottom:2px solid var(--primary);';
+        header.innerText = d;
+        grid.appendChild(header);
+      });
+
+      const firstDay = new Date(y, m - 1, 1).getDay();
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-day';
+        empty.style.opacity = '0.3';
+        grid.appendChild(empty);
+      }
+
+      const items = database.filter(e => e.type === typeFilter);
+      for (let d = 1; d <= days; d++) {
+        const cur = `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+        const cell = document.createElement('div');
+        cell.className = 'calendar-day';
+        cell.innerHTML = `<span class="calendar-day-num">${d}</span>`;
+
+        items.forEach(e => {
+          if (new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
+            if (e.type === 'Visit') {
+              cell.innerHTML += `<div class="cal-entry entry-visit">${e.loc} - ${e.mgr.split(' ').slice(1).join(' ') || e.mgr}</div>`;
+            } else if (e.type === 'Training') {
+              cell.innerHTML += `<div class="cal-entry entry-trg">${e.topic || '—'} - ${e.venue || e.loc}</div>`;
+            }
+          }
+        });
+
+        grid.appendChild(cell);
+      }
+    }
+
+    function renderTravelCalendar() { renderMonthCalendar('travelMonth', 'travelCalendarGrid', 'Visit'); }
+    function renderTrainingCalendar() { renderMonthCalendar('trainingMonth', 'trainingCalendarGrid', 'Training'); }
 
     function downloadWallPDF() {
       const element = document.getElementById('pdf-export-container');
