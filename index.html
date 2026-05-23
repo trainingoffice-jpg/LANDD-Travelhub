@@ -1714,6 +1714,7 @@
     async function revokeMine(id) {
        if(!confirm('Are you sure you want to revoke/delete this pending entry?')) return;
        database = database.filter(x => x.id !== id);
+       await sb.from('ld_entries').delete().eq('id', id);
        await syncData();
        renderAll();
     }
@@ -2175,7 +2176,7 @@
       alert(`Bulk approved ${ids.length} entries.`);
     }
 
-    async function delEntry(id) { if(!confirm('Delete?')) return; database = database.filter(x => x.id !== id); await syncData(); updAdmin(); renderAll(); }
+    async function delEntry(id) { if(!confirm('Delete?')) return; database = database.filter(x => x.id !== id); await sb.from('ld_entries').delete().eq('id', id); await syncData(); updAdmin(); renderAll(); }
     async function apprEntryByVal(id) { 
         id = Number(id);
         const idx = database.findIndex(x => x.id === id);
