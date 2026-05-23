@@ -837,7 +837,10 @@
               </div>
               <div class="bulk-action-bar hidden" id="bulkActionBar">
                 <span id="bulkCount" style="font-weight:700;font-size:12px;color:#92400E">0 items selected</span>
-                <button class="btn btn-primary" style="padding:6px 14px;font-size:11px;" onclick="bulkApprove()">Bulk Approve ✔</button>
+                <div style="display:flex;gap:10px;">
+                  <button class="btn btn-primary" style="padding:6px 14px;font-size:11px;" onclick="bulkApprove()">Bulk Approve ✔</button>
+                  <button class="btn" style="padding:6px 14px;font-size:11px;background:var(--danger);color:white;" onclick="bulkDelete()">Bulk Delete 🗑</button>
+                </div>
               </div>
               <table id="adminTable">
                 <thead>
@@ -1233,8 +1236,13 @@
       if (trainingMonth) trainingMonth.value = new Date().toISOString().slice(0, 7);
       const ts = document.getElementById('t_start_time'), te = document.getElementById('t_end_time');
       for (let h = 7; h <= 20; h++) {
-        const lbl = (h > 12 ? h - 12 : h) + (h >= 12 ? ':00 PM' : ':00 AM');
-        ts.add(new Option(lbl, h)); te.add(new Option(lbl, h));
+        for (let m of ['00', '30']) {
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          const hourLabel = h > 12 ? h - 12 : h;
+          const lbl = `${hourLabel}:${m} ${ampm}`;
+          const val = h + (m === '30' ? 0.5 : 0);
+          ts.add(new Option(lbl, val)); te.add(new Option(lbl, val));
+        }
       }
 
       initReportForm();
@@ -1617,7 +1625,10 @@
             ${needs.length > 0 ? `<span class="badge" style="background:#fff8e1;color:#f57f17;">${needs.length} Training Needs</span>` : ''}
           </div>
         </div>
-        <button class="report-expand-btn" onclick="toggleReportDetail(${r.id})">View ▾</button>
+        <div class="report-actions" style="display:flex;gap:10px;">
+          <button class="btn btn-primary" style="padding:6px 12px;font-size:12px;margin:0;" onclick="downloadReportPdf(${r.id})">Download</button>
+          <button class="report-expand-btn" style="padding:6px 12px;font-size:12px;margin:0;cursor:pointer;border:1px solid #ccc;border-radius:6px;background:#f8f9fa;" onclick="toggleReportDetail(${r.id})">View ▾</button>
+        </div>
       </div>
       <div id="rd-${r.id}" class="hidden" style="border-top:1px solid #eee;padding-top:14px;margin-top:8px;font-size:12px;">
         ${r.trainers ? `<div style="margin-bottom:10px;"><b>Showroom Trainers:</b> ${r.trainers.replace(/\n/g, '<br>')}</div>` : ''}
@@ -1682,6 +1693,29 @@
     function toggleReportDetail(id) {
       const el = document.getElementById('rd-' + id);
       el.classList.toggle('hidden');
+    }
+
+    function downloadReportPdf(id) {
+      const el = document.getElementById('rd-' + id);
+      const isHidden = el.classList.contains('hidden');
+      if (isHidden) el.classList.remove('hidden');
+      
+      const card = el.parentElement;
+      const opt = {
+        margin:       0.5,
+        filename:     `Visit_Report_${id}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      
+      const actions = card.querySelector('.report-actions');
+      if (actions) actions.style.display = 'none';
+
+      html2pdf().set(opt).from(card).save().then(() => {
+        if (actions) actions.style.display = 'flex';
+        if (isHidden) el.classList.add('hidden');
+      });
     }
 
     // ─── RENDER ALL ───────────────────────────────────────────────────
@@ -2174,6 +2208,21 @@
       await syncData();
       updAdmin();
       alert(`Bulk approved ${ids.length} entries.`);
+    }
+
+    async function bulkDelete() {
+      const ids = Array.from(document.querySelectorAll('.admin-chk:checked')).map(c => Number(c.value));
+      if(!ids.length) return;
+      if(!confirm(`Are you sure you want to delete ${ids.length} entries?`)) return;
+      
+      database = database.filter(x => !ids.includes(x.id));
+      const deletePromises = ids.map(id => sb.from('ld_entries').delete().eq('id', id));
+      await Promise.all(deletePromises);
+      
+      await syncData();
+      updAdmin();
+      renderAll();
+      alert(`Bulk deleted ${ids.length} entries.`);
     }
 
     async function delEntry(id) { if(!confirm('Delete?')) return; database = database.filter(x => x.id !== id); await sb.from('ld_entries').delete().eq('id', id); await syncData(); updAdmin(); renderAll(); }
