@@ -201,7 +201,6 @@
       <p style="font-size:12px;color:#666;margin-bottom:14px">Enterprise Resource Hub — Secure Access</p>
       <div class="role-tabs">
         <button class="role-tab active" onclick="setLoginRole('manager',this)">👤 Manager</button>
-        <button class="role-tab" onclick="setLoginRole('hod',this)">👔 HOD</button>
         <button class="role-tab" onclick="setLoginRole('admin',this)">🛡 Admin</button>
       </div>
       <input type="text" id="userLogin" placeholder="Username">
@@ -221,9 +220,7 @@
         <div class="nav-link" id="nl-report" onclick="showTabByName('report')">📋 Visit Report</div>
         <div class="nav-link" id="nl-master" onclick="showTabByName('master')">🗓 Master Schedule</div>
         <div class="nav-link" id="nl-wall" onclick="showTabByName('wall')">🗺 Exec Wall</div>
-        <div class="nav-link hod-tab" id="nl-hod" onclick="showTabByName('hod')">👔 HOD Dashboard</div>
-        <div class="nav-link hod-tab" id="nl-perf" onclick="showTabByName('perf')">📊 Performance</div>
-        <div class="nav-link hod-tab" id="nl-admin" onclick="showTabByName('admin')">🛡 Admin</div>
+        <div class="nav-link admin-tab" id="nl-admin" onclick="showTabByName('admin')">🛡 Admin</div>
         <button onclick="logout()"
           style="background:#ff5252;color:white;border:none;padding:5px 12px;border-radius:4px;font-size:9px;cursor:pointer;margin-left:6px;">LOGOUT</button>
       </div>
@@ -886,9 +883,7 @@
                 <div style="flex:0 0 200px;display:flex;flex-direction:column;gap:8px;">
                   <button class="btn mbtn active" style="text-align:left;background:var(--primary);color:white;"
                     onclick="changeMasterTab('managers', this)">Managers & Logins</button>
-                  <button class="btn mbtn"
-                    style="text-align:left;background:rgba(255,255,255,0.05);color:var(--text-muted);"
-                    onclick="changeMasterTab('hod', this)">HOD Login</button>
+
                   <button class="btn mbtn"
                     style="text-align:left;background:rgba(255,255,255,0.05);color:var(--text-muted);"
                     onclick="changeMasterTab('showrooms', this)">Showrooms</button>
@@ -929,11 +924,21 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script>
-    const SUPABASE_URL = 'https://dzipybscmmhhgikryhbo.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6aXB5YnNjbW1oaGdpa3J5aGJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNzMyMzksImV4cCI6MjA5MTY0OTIzOX0.nuG6oOPkywv7MbpcX6YXnHucsW240RucKLbMID57qmM';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const firebaseConfig = {
+      apiKey: "AIzaSyA8bRB56xxzEO0ib4DTYuqEnCmWwyD2atU",
+      authDomain: "travelplanner-5ddc9.firebaseapp.com",
+      databaseURL: "https://travelplanner-5ddc9-default-rtdb.firebaseio.com",
+      projectId: "travelplanner-5ddc9",
+      storageBucket: "travelplanner-5ddc9.firebasestorage.app",
+      messagingSenderId: "1047379419645",
+      appId: "1:1047379419645:web:54df92f00c24a3820b7994",
+      measurementId: "G-2CJKPZ613T"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
     const GOOGLE_SHEETS_BACKUP_URL = 'https://script.google.com/macros/s/AKfycbxXbVAYIm8V1ibNb-baBTTqy8n1XZUcTkNNQDVWh4AFWMrtrTNxrNLxCiar-PXHIlY/exec';
 
     const oldManagers = [];
@@ -980,9 +985,6 @@
 
       if (currentLoginRole === 'admin') {
         if (u === 'admin' && p === 'Admin@2026') currentUser = { name: "ADMIN", role: "admin" };
-      } else if (currentLoginRole === 'hod') {
-        if (u === masterData.hod.username.toLowerCase() && p === masterData.hod.password) currentUser = { name: masterData.hod.name, role: "hod" };
-        else if (u === 'hod' && p === 'hod@2024') currentUser = { name: masterData.hod.name, role: "hod" }; // fallback
       } else {
         // Primary: exact username match (case-insensitive)
         const found = masterData.managers.find(m => m.username.toLowerCase() === u);
@@ -1019,16 +1021,17 @@
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('appContent').style.display = 'block';
 
-      const icons = { admin: ' 🛡', hod: ' 👔', manager: '' };
+      const icons = { admin: ' 🛡', manager: '' };
       document.getElementById('navUser').innerText = currentUser.name + (icons[currentUser.role] || '');
       document.getElementById('p_mgr_fixed').value = currentUser.name;
       document.getElementById('t_mgr_fixed').value = currentUser.name;
       document.getElementById('vr_mgr').value = currentUser.name;
 
       // Nav visibility
-      const isPrivileged = currentUser.role === 'hod' || currentUser.role === 'admin';
-      ['nl-hod', 'nl-perf', 'nl-admin'].forEach(id => {
-        document.getElementById(id).style.display = isPrivileged ? '' : 'none';
+      const isPrivileged = currentUser.role === 'admin';
+      ['nl-admin'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isPrivileged ? '' : 'none';
       });
 
       popUI();
@@ -1040,23 +1043,15 @@
         document.getElementById('adminLock').classList.add('hidden');
         document.getElementById('adminUI').classList.remove('hidden');
         updAdmin();
-      } else if (currentUser.role === 'hod') {
-        document.getElementById('adminLock').classList.add('hidden');
-        document.getElementById('adminUI').classList.remove('hidden');
-        updAdmin();
-        populateHODFilters();
-        renderHOD();
-        renderPerf();
       }
 
       // Restore saved tab if valid and allowed
-      const privilegedTabs = ['hod', 'perf', 'admin'];
+      const privilegedTabs = ['admin'];
       if (savedTab && (!privilegedTabs.includes(savedTab) || isPrivileged)) {
         showTabByName(savedTab);
       } else {
         // Fallbacks
         if (currentUser.role === 'admin') showTabByName('admin');
-        else if (currentUser.role === 'hod') showTabByName('hod');
         else showTabByName('planner');
       }
     }
@@ -1064,10 +1059,9 @@
     // ─── DATA PERSISTENCE ─────────────────────────────────────────────
     async function loadAllData() {
       try {
-        const { data: mData } = await sb.from('ld_master').select('id,config').limit(1).single();
-        if (mData && mData.config) {
-          masterData = mData.config;
-          masterRowId = mData.id;
+        const masterSnap = await db.ref('ld_master').once('value');
+        if (masterSnap.exists()) {
+          masterData = masterSnap.val();
 
           // ── Migrate old flat topics array to new categorized format ──
           if (Array.isArray(masterData.topics) && masterData.topics.length > 0 && typeof masterData.topics[0] === 'string') {
@@ -1082,7 +1076,7 @@
               { category: "Assessments & Audits", items: ["Dipstick Assessment", "Teach-Back Session", "Grooming Audit", "Visual Impact Audit"] },
               { category: "Other", items: ["Morning Briefing", "Campaign Briefing", "Refresher Training", "Skill Based Training", "Custom / Ad-hoc Topic"] }
             ];
-            // Save migrated format back to Supabase automatically
+            // Save migrated format back to Firebase automatically
             setTimeout(() => syncMasterData(), 1500);
           }
 
@@ -1094,13 +1088,17 @@
           }
         }
 
-        const { data: eData } = await sb.from('ld_entries').select('data');
-        if (eData) database = eData.map(d => d.data);
+        const entriesSnap = await db.ref('ld_entries').once('value');
+        if (entriesSnap.exists()) {
+          database = Object.values(entriesSnap.val());
+        }
 
-        const { data: rData } = await sb.from('ld_reports').select('data');
-        if (rData) visitReports = rData.map(d => d.data);
+        const reportsSnap = await db.ref('ld_reports').once('value');
+        if (reportsSnap.exists()) {
+          visitReports = Object.values(reportsSnap.val());
+        }
       } catch (err) {
-        console.error("Supabase Load Error:", err);
+        console.error("Firebase Load Error:", err);
       }
       enableLoginButton();
       popUI();
@@ -1115,17 +1113,17 @@
     }
 
     async function syncData() {
-      for (const item of database) {
-        await sb.from('ld_entries').upsert({ id: item.id, data: item });
-      }
+      const entriesObj = {};
+      database.forEach(item => { entriesObj[item.id] = item; });
+      await db.ref('ld_entries').set(entriesObj);
       renderAll();
       backupEntriesToGoogleSheets().catch(err => console.warn('Google Sheets entries backup failed', err));
     }
 
     async function syncReports() {
-      for (const report of visitReports) {
-        await sb.from('ld_reports').upsert({ id: report.id, data: report });
-      }
+      const reportsObj = {};
+      visitReports.forEach(report => { reportsObj[report.id] = report; });
+      await db.ref('ld_reports').set(reportsObj);
       backupReportsToGoogleSheets().catch(err => console.warn('Google Sheets reports backup failed', err));
     }
 
@@ -1160,26 +1158,16 @@
       return backupToGoogleSheet('VisitReports', recentReports);
     }
 
-    let masterRowId = null;
-
     async function syncMasterData() {
       const addBtn = document.getElementById('mstrSaveBtn') || document.querySelector('#masterControls .btn-primary');
       if (addBtn) { const t = addBtn.innerText; addBtn.innerText = '☁️ Saving...'; setTimeout(() => addBtn.innerText = t, 2500); }
 
-      let error;
-      if (masterRowId) {
-        // Row exists — update it
-        ({ error } = await sb.from('ld_master').update({ config: masterData }).eq('id', masterRowId));
-      } else {
-        // First time — insert and capture the generated id
-        const result = await sb.from('ld_master').insert({ config: masterData }).select('id').single();
-        error = result.error;
-        if (result.data) masterRowId = result.data.id;
-      }
-
-      if (error) {
+      try {
+        await db.ref('ld_master').set(masterData);
+      } catch(error) {
         alert('Cloud Save Error: ' + error.message);
       }
+      
       popUI();
       renderMasterTable();
     }
@@ -1268,7 +1256,7 @@
     }
 
     function isPrivileged() {
-      return currentUser && (currentUser.role === 'hod' || currentUser.role === 'admin');
+      return currentUser && currentUser.role === 'admin';
     }
 
     // ─── SUBMIT TRAVEL ────────────────────────────────────────────────
@@ -2216,8 +2204,9 @@
       if(!confirm(`Are you sure you want to delete ${ids.length} entries?`)) return;
       
       database = database.filter(x => !ids.includes(x.id));
-      const deletePromises = ids.map(id => sb.from('ld_entries').delete().eq('id', id));
-      await Promise.all(deletePromises);
+      const updates = {};
+      ids.forEach(id => { updates[id] = null; });
+      await db.ref('ld_entries').update(updates);
       
       await syncData();
       updAdmin();
@@ -2225,7 +2214,7 @@
       alert(`Bulk deleted ${ids.length} entries.`);
     }
 
-    async function delEntry(id) { if(!confirm('Delete?')) return; database = database.filter(x => x.id !== id); await sb.from('ld_entries').delete().eq('id', id); await syncData(); updAdmin(); renderAll(); }
+    async function delEntry(id) { if(!confirm('Delete?')) return; database = database.filter(x => x.id !== id); await db.ref('ld_entries/' + id).remove(); await syncData(); updAdmin(); renderAll(); }
     async function apprEntryByVal(id) { 
         id = Number(id);
         const idx = database.findIndex(x => x.id === id);
