@@ -195,7 +195,7 @@
 <body>
 
   <!-- LOGIN -->
-  <div id="loginPage">
+  <div id="loginPage" style="display:none;">
     <div class="login-card">
       <h1>L&D HUB v10</h1>
       <p style="font-size:12px;color:#666;margin-bottom:14px">Enterprise Resource Hub — Secure Access</p>
@@ -676,6 +676,9 @@
             <div style="display:flex;gap:10px;align-items:center;">
               <select id="master-filter-loc" onchange="renderAll()" style="width:160px;"></select>
               <input type="date" id="master-filter-date" onchange="renderAll()" style="width:140px;">
+              <button onclick="downloadMasterExcel()"
+                style="background:#10b981;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700;font-size:11px;">📥
+                Excel</button>
             </div>
           </div>
           <table id="masterTable">
@@ -701,6 +704,9 @@
             <h2 style="margin:0;border:none;padding:0;">🗺 Executive Monthly Wall</h2>
             <div style="display:flex;gap:10px;align-items:center;">
               <input type="month" id="wallMonth" onchange="renderWall()" style="width:190px">
+              <button onclick="downloadWallExcel()"
+                style="background:#10b981;color:white;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">📥
+                Download Excel</button>
               <button onclick="downloadWallPDF()"
                 style="background:#e65100;color:white;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">📥
                 Download PDF</button>
@@ -830,6 +836,7 @@
                   <option value="">All Status</option>
                   <option value="Yes">Approved</option>
                   <option value="No">Pending</option>
+                  <option value="Rejected">Rejected</option>
                 </select>
               </div>
               <div class="bulk-action-bar hidden" id="bulkActionBar">
@@ -984,7 +991,7 @@
       currentUser = null;
 
       if (currentLoginRole === 'admin') {
-        if (u === 'admin' && p === 'Admin@2026') currentUser = { name: "ADMIN", role: "admin" };
+        if (u === 'admin' && p === 'Admin@2026') currentUser = { name: "ADMIN", username: "Admin", role: "admin" };
       } else {
         // Primary: exact username match (case-insensitive)
         const found = masterData.managers.find(m => m.username.toLowerCase() === u);
@@ -1022,7 +1029,8 @@
       document.getElementById('appContent').style.display = 'block';
 
       const icons = { admin: ' 🛡', manager: '' };
-      document.getElementById('navUser').innerText = currentUser.name + (icons[currentUser.role] || '');
+      const displayId = currentUser.username ? ` | ${currentUser.username}` : '';
+      document.getElementById('navUser').innerText = currentUser.name + displayId + (icons[currentUser.role] || '');
       document.getElementById('p_mgr_fixed').value = currentUser.name;
       document.getElementById('t_mgr_fixed').value = currentUser.name;
       document.getElementById('vr_mgr').value = currentUser.name;
@@ -1054,6 +1062,14 @@
         if (currentUser.role === 'admin') showTabByName('admin');
         else showTabByName('planner');
       }
+
+      if (!window.sheetSyncStarted) {
+        window.sheetSyncStarted = true;
+        setInterval(() => {
+          if (database.length > 0) backupToGoogleSheet('TravelAndTrainingEntries', database).catch(e => console.warn(e));
+          if (visitReports.length > 0) backupToGoogleSheet('VisitReports', visitReports).catch(e => console.warn(e));
+        }, 7200000); // 2 hours
+      }
     }
 
     // ─── DATA PERSISTENCE ─────────────────────────────────────────────
@@ -1062,6 +1078,13 @@
         const masterSnap = await db.ref('ld_master').once('value');
         if (masterSnap.exists()) {
           masterData = masterSnap.val();
+
+          // Firebase removes empty arrays, ensure they exist:
+          if (!masterData.managers) masterData.managers = [];
+          if (!masterData.showrooms) masterData.showrooms = [];
+          if (!masterData.regions) masterData.regions = [];
+          if (!masterData.venues) masterData.venues = [];
+          if (!masterData.topics) masterData.topics = [];
 
           // ── Migrate old flat topics array to new categorized format ──
           if (Array.isArray(masterData.topics) && masterData.topics.length > 0 && typeof masterData.topics[0] === 'string') {
@@ -1158,12 +1181,16 @@
       return backupToGoogleSheet('VisitReports', recentReports);
     }
 
-    async function syncMasterData() {
+    async function syncMasterData(specificCategory = null) {
       const addBtn = document.getElementById('mstrSaveBtn') || document.querySelector('#masterControls .btn-primary');
       if (addBtn) { const t = addBtn.innerText; addBtn.innerText = '☁️ Saving...'; setTimeout(() => addBtn.innerText = t, 2500); }
 
       try {
-        await db.ref('ld_master').set(masterData);
+        if (specificCategory) {
+          await db.ref('ld_master/' + specificCategory).set(masterData[specificCategory]);
+        } else {
+          await db.ref('ld_master').set(masterData);
+        }
       } catch(error) {
         alert('Cloud Save Error: ' + error.message);
       }
@@ -1725,18 +1752,28 @@
       if (myTrain.length && trainingPage * 5 >= myTrain.length) trainingPage = 0;
 
       let tShow = myTravel.slice(travelPage * 5, travelPage * 5 + 5);
-      tTb.innerHTML = tShow.map(i => `<tr><td>${i.from}</td><td>${i.to}</td><td>${i.loc}</td><td>${i.topic}</td><td><span style="padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;background:${i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : 'rgba(255,165,0,0.2)'};color:${i.app === 'Yes' ? '#4ade80' : '#fbbf24'}">${i.app === 'Yes' ? 'Approved' : 'Pending'}</span> ${i.app === 'No' ? `<button onclick="revokeMine(${i.id})" style="background:none; border:none; color:red; cursor:pointer; font-size:10px; text-decoration:underline;">Revoke</button>` : ''}</td></tr>`).join('');
+      tTb.innerHTML = tShow.map(i => {
+        const bg = i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : (i.app === 'Rejected' ? 'rgba(255,0,0,0.1)' : 'rgba(255,165,0,0.2)');
+        const col = i.app === 'Yes' ? '#4ade80' : (i.app === 'Rejected' ? 'crimson' : '#fbbf24');
+        const txt = i.app === 'Yes' ? 'Approved' : (i.app === 'Rejected' ? 'Rejected' : 'Pending');
+        return `<tr><td>${i.from}</td><td>${i.to}</td><td>${i.loc}</td><td>${i.topic}</td><td><span style="padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;background:${bg};color:${col}">${txt}</span> ${i.app === 'No' ? `<button onclick="revokeMine(${i.id})" style="background:none; border:none; color:red; cursor:pointer; font-size:10px; text-decoration:underline;">Revoke</button>` : ''}</td></tr>`;
+      }).join('');
       document.getElementById('travelPageInfo').innerText = myTravel.length ? `Showing ${travelPage * 5 + 1}-${Math.min(travelPage * 5 + 5, myTravel.length)} of ${myTravel.length}` : 'No entries';
 
       let trShow = myTrain.slice(trainingPage * 5, trainingPage * 5 + 5);
-      trTb.innerHTML = trShow.map(i => `<tr><td>${i.from} to ${i.to}</td><td>${i.topic}</td><td>${i.loc}</td><td>${i.venue || '—'}</td><td><span style="padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;background:${i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : 'rgba(255,165,0,0.2)'};color:${i.app === 'Yes' ? '#4ade80' : '#fbbf24'}">${i.app === 'Yes' ? 'Approved' : 'Pending'}</span> ${i.app === 'No' ? `<button onclick="revokeMine(${i.id})" style="background:none; border:none; color:red; cursor:pointer; font-size:10px; text-decoration:underline;">Revoke</button>` : ''}</td></tr>`).join('');
+      trTb.innerHTML = trShow.map(i => {
+        const bg = i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : (i.app === 'Rejected' ? 'rgba(255,0,0,0.1)' : 'rgba(255,165,0,0.2)');
+        const col = i.app === 'Yes' ? '#4ade80' : (i.app === 'Rejected' ? 'crimson' : '#fbbf24');
+        const txt = i.app === 'Yes' ? 'Approved' : (i.app === 'Rejected' ? 'Rejected' : 'Pending');
+        return `<tr><td>${i.from} to ${i.to}</td><td>${i.topic}</td><td>${i.loc}</td><td>${i.venue || '—'}</td><td><span style="padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;background:${bg};color:${col}">${txt}</span> ${i.app === 'No' ? `<button onclick="revokeMine(${i.id})" style="background:none; border:none; color:red; cursor:pointer; font-size:10px; text-decoration:underline;">Revoke</button>` : ''}</td></tr>`;
+      }).join('');
       document.getElementById('trainingPageInfo').innerText = myTrain.length ? `Showing ${trainingPage * 5 + 1}-${Math.min(trainingPage * 5 + 5, myTrain.length)} of ${myTrain.length}` : 'No entries';
     }
 
     async function revokeMine(id) {
        if(!confirm('Are you sure you want to revoke/delete this pending entry?')) return;
        database = database.filter(x => x.id !== id);
-       await sb.from('ld_entries').delete().eq('id', id);
+       await db.ref('ld_entries/' + id).remove();
        await syncData();
        renderAll();
     }
@@ -1748,6 +1785,7 @@
 
       if (tb) {
         database.filter(item => {
+          if (item.app === 'Rejected') return false;
           if (mLocFilter && item.loc !== mLocFilter) return false;
           if (mDateFilter && (mDateFilter < item.from || mDateFilter > item.to)) return false;
           return true;
@@ -1757,7 +1795,10 @@
           const time = item.type === 'Training' ? `<br><small>${item.sTime} - ${item.eTime}</small>` : '';
           const overrideFlag = item.overridden ? ' <span title="Conflict overridden by HOD/Admin" style="color:#e65100;font-size:10px;">⚠️OVR</span>' : '';
           const locDisplay = item.venue && item.venue !== item.loc ? `${item.loc}<br><small style="color:#888">${item.venue}</small>` : item.loc;
-          tr.innerHTML = `<td>${item.from} to ${item.to}${time}</td><td>${locDisplay}</td><td>${item.mgr}</td><td>${item.topic}${overrideFlag}</td><td><span style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;display:inline-block;background:${item.app === 'Yes' ? 'rgba(0,255,128,0.2)' : 'rgba(255,165,0,0.2)'};color:${item.app === 'Yes' ? '#4ade80' : '#fbbf24'}">${item.app === 'Yes' ? '✔ Approved' : '⏳ Pending'}</span></td><td>🏨${item.h === 'B' ? '✔' : '—'} ✈${item.t_s === 'B' ? '✔' : '—'}</td>`;
+          const bg = item.app === 'Yes' ? 'rgba(0,255,128,0.2)' : 'rgba(255,165,0,0.2)';
+          const col = item.app === 'Yes' ? '#4ade80' : '#fbbf24';
+          const txt = item.app === 'Yes' ? '✔ Approved' : '⏳ Pending';
+          tr.innerHTML = `<td>${item.from} to ${item.to}${time}</td><td>${locDisplay}</td><td>${item.mgr}</td><td>${item.topic}${overrideFlag}</td><td><span style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;display:inline-block;background:${bg};color:${col}">${txt}</span></td><td>🏨${item.h === 'B' ? '✔' : '—'} ✈${item.t_s === 'B' ? '✔' : '—'}</td>`;
         });
       }
       renderRecent();
@@ -1807,11 +1848,13 @@
         divTraining.innerHTML = `<span class="calendar-day-num">${d}</span>`;
 
         database.forEach(e => {
+          if (e.app === 'Rejected') return;
           if (new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
+            const s = e.app !== 'Yes' ? 'background:#FEE2E2;color:#B91C1C;border-left:2px solid #EF4444;' : '';
             if (e.type === 'Visit') {
-              divTravel.innerHTML += `<div class="cal-entry entry-visit">${e.loc} - ${e.mgr.split(' ').slice(1).join(' ') || e.mgr}</div>`;
+              divTravel.innerHTML += `<div class="cal-entry entry-visit" style="${s}">${e.loc} - ${e.mgr.split(' ').slice(1).join(' ') || e.mgr}</div>`;
             } else if (e.type === 'Training') {
-              divTraining.innerHTML += `<div class="cal-entry entry-trg">${e.topic || '—'} - ${e.venue || e.loc}</div>`;
+              divTraining.innerHTML += `<div class="cal-entry entry-trg" style="${s}">${e.topic || '—'} - ${e.venue || e.loc}</div>`;
             }
           }
         });
@@ -1860,11 +1903,13 @@
         cell.innerHTML = `<span class="calendar-day-num">${d}</span>`;
 
         items.forEach(e => {
+          if (e.app === 'Rejected') return;
           if (new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
+            const s = e.app !== 'Yes' ? 'background:#FEE2E2;color:#B91C1C;border-left:2px solid #EF4444;' : '';
             if (e.type === 'Visit') {
-              cell.innerHTML += `<div class="cal-entry entry-visit">${e.loc} - ${e.mgr.split(' ').slice(1).join(' ') || e.mgr}</div>`;
+              cell.innerHTML += `<div class="cal-entry entry-visit" style="${s}">${e.loc} - ${e.mgr.split(' ').slice(1).join(' ') || e.mgr}</div>`;
             } else if (e.type === 'Training') {
-              cell.innerHTML += `<div class="cal-entry entry-trg">${e.topic || '—'} - ${e.venue || e.loc}</div>`;
+              cell.innerHTML += `<div class="cal-entry entry-trg" style="${s}">${e.topic || '—'} - ${e.venue || e.loc}</div>`;
             }
           }
         });
@@ -1906,6 +1951,80 @@
       html2pdf().from(element).set(opt).save().then(() => {
         if (btn) btn.innerText = originalText;
       });
+    }
+
+    function downloadWallExcel() {
+      const monthInput = document.getElementById('wallMonth');
+      if (!monthInput || !monthInput.value) return alert('Select a month first.');
+      const [y, m] = monthInput.value.split('-').map(Number);
+
+      function generateCalendarSheet(type) {
+        const aoa = [];
+        aoa.push([type === 'Visit' ? '✈ Travel Entries' : '🎓 Training Entries']);
+        aoa.push(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
+        
+        let currentRow = [];
+        const firstDay = new Date(y, m - 1, 1).getDay();
+        const days = new Date(y, m, 0).getDate();
+        
+        for (let i = 0; i < firstDay; i++) currentRow.push('');
+        
+        for (let d = 1; d <= days; d++) {
+          const cur = `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          let cellText = `${d}\n`;
+          
+          database.forEach(e => {
+            if (e.app === 'Rejected') return;
+            if (e.type === type && new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
+              const prefix = e.app !== 'Yes' ? '[PENDING] ' : '';
+              if (type === 'Visit') {
+                cellText += `• ${prefix}${e.loc} - ${e.mgr.split(' ').slice(1).join(' ') || e.mgr}\n`;
+              } else {
+                cellText += `• ${prefix}${e.topic || '—'} - ${e.venue || e.loc}\n`;
+              }
+            }
+          });
+          
+          if (type === 'Visit') {
+            visitReports.forEach(r => {
+              if (new Date(cur) >= new Date(r.from) && new Date(cur) <= new Date(r.to)) {
+                cellText += `📋 ${r.showroom} - ${r.mgr.split(' ').slice(1).join(' ') || r.mgr}\n`;
+              }
+            });
+          }
+          
+          currentRow.push(cellText.trim());
+          if (currentRow.length === 7) {
+            aoa.push(currentRow);
+            currentRow = [];
+          }
+        }
+        
+        if (currentRow.length > 0) {
+          while (currentRow.length < 7) currentRow.push('');
+          aoa.push(currentRow);
+        }
+        return aoa;
+      }
+
+      const wsTravel = XLSX.utils.aoa_to_sheet(generateCalendarSheet('Visit'));
+      const wsTraining = XLSX.utils.aoa_to_sheet(generateCalendarSheet('Training'));
+      
+      wsTravel['!cols'] = Array(7).fill({wch: 25});
+      wsTraining['!cols'] = Array(7).fill({wch: 25});
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, wsTravel, "Travel Calendar");
+      XLSX.utils.book_append_sheet(wb, wsTraining, "Training Calendar");
+      XLSX.writeFile(wb, `Executive_Wall_${y}_${m}.xlsx`);
+    }
+
+    function downloadMasterExcel() {
+      const tb = document.querySelector('#masterTable tbody');
+      if (!tb || !tb.rows.length) return alert('No data to download.');
+      
+      const wb = XLSX.utils.table_to_book(document.getElementById('masterTable'), {sheet: "Master Schedule"});
+      XLSX.writeFile(wb, 'Consolidated_Master_Schedule.xlsx');
     }
 
     // ─── TAB ROUTING ─────────────────────────────────────────────────
@@ -2078,20 +2197,38 @@
         
         if (confirm(`Import ${json.length} items to ${currentMasterSub}?`)) {
           if (currentMasterSub === 'managers') {
-            json.forEach(row => { if(row.Name && row.Username) masterData.managers.push({name: row.Name, username: String(row.Username), password: String(row.Password || '123')}); });
+            json.forEach(row => { 
+              const keys = Object.keys(row);
+              const getVal = (possibleNames) => {
+                for (let k of keys) { if (possibleNames.includes(k.toLowerCase().trim())) return row[k]; }
+                return null;
+              };
+              const nm = getVal(['name', 'manager', 'manager name', 'employee', 'employee name']);
+              const usr = getVal(['username', 'user name', 'id', 'employee id', 'emp id', 'empid', 'login']);
+              const pwd = getVal(['password', 'pass', 'pwd']) || '123';
+              
+              const firstVal = Object.values(row)[0];
+              const finalNm = nm || usr || firstVal;
+              const finalUsr = usr || nm || firstVal;
+              
+              if(finalNm && finalUsr) masterData.managers.push({name: String(finalNm), username: String(finalUsr), password: String(pwd)}); 
+            });
           } else if (currentMasterSub === 'topics') {
             json.forEach(row => {
-              if (row.Topic && row.Category) {
-                let f = masterData.topics.find(t => t.category.toLowerCase() === String(row.Category).toLowerCase());
-                if (f) f.items.push(String(row.Topic));
-                else masterData.topics.push({category: String(row.Category), items: [String(row.Topic)]});
+              const tp = row.Topic || row.topic || row.TOPIC;
+              const cat = row.Category || row.category || row.CATEGORY;
+              if (tp && cat) {
+                let f = masterData.topics.find(t => t.category.toLowerCase() === String(cat).toLowerCase());
+                if (f) f.items.push(String(tp));
+                else masterData.topics.push({category: String(cat), items: [String(tp)]});
               }
             });
           } else {
-            json.forEach(row => { const val = row.Name || row.Value || Object.values(row)[0]; if(val) masterData[currentMasterSub].push(String(val)); });
+            json.forEach(row => { const val = row.Name || row.name || row.NAME || row.Value || row.value || row.VALUE || Object.values(row)[0]; if(val) masterData[currentMasterSub].push(String(val)); });
           }
-          await syncMasterData();
+          await syncMasterData(currentMasterSub);
           alert('Import complete!');
+          document.getElementById('bulkExcelInput').value = '';
         }
       };
       reader.readAsArrayBuffer(file);
@@ -2104,7 +2241,7 @@
       } else {
         masterData[currentMasterSub].splice(idx, 1);
       }
-      await syncMasterData();
+      await syncMasterData(currentMasterSub);
     }
 
     async function editManager(idx) {
@@ -2116,7 +2253,7 @@
       const pwd = prompt('Login Password:', m.password);
       if (pwd === null) return;
       masterData.managers[idx] = { name: nm.trim() || m.name, username: usr.trim() || m.username, password: pwd.trim() || m.password };
-      await syncMasterData();
+      await syncMasterData('managers');
     }
 
     async function editHOD() {
@@ -2127,7 +2264,7 @@
       const pwd = prompt('HOD Login Password:', masterData.hod.password);
       if (pwd === null) return;
       masterData.hod = { name: nm.trim() || masterData.hod.name, username: usr.trim() || masterData.hod.username, password: pwd.trim() || masterData.hod.password };
-      await syncMasterData();
+      await syncMasterData('hod');
     }
 
     async function editArrayItem(idx) {
@@ -2135,7 +2272,7 @@
       const nw = prompt('Edit value:', old);
       if (nw !== null && nw.trim() !== '') {
         masterData[currentMasterSub][idx] = nw.trim();
-        await syncMasterData();
+        await syncMasterData(currentMasterSub);
       }
     }
 
@@ -2160,18 +2297,22 @@
         (!appF || x.app === appF)
       ).sort((a,b) => b.id - a.id);
 
-      tb.innerHTML = filtered.map((x, i) => `
+      tb.innerHTML = filtered.map((x, i) => {
+        const bg = x.app === 'Yes' ? 'green' : (x.app === 'Rejected' ? 'crimson' : '#ff9800');
+        const txt = x.app === 'Yes' ? '✔ Approved' : (x.app === 'Rejected' ? '❌ Rejected' : '⏳ Pending');
+        return `
     <tr>
       <td><input type="checkbox" class="admin-chk" value="${x.id}" onchange="updateBulkBar()"></td>
       <td><span class="badge ${x.type === 'Visit' ? 'badge-visit' : 'badge-train'}">${x.type === 'Visit' ? 'Travel' : 'Training'}</span></td>
       <td>${x.from}${x.to && x.to !== x.from ? '<br>→' + x.to : ''}</td>
       <td>${x.mgr}</td><td>${x.loc}</td><td>${x.topic || '—'}</td>
-      <td><b style="color:${x.app === 'Yes' ? 'green' : 'crimson'}">${x.app === 'Yes' ? '✔ Approved' : '⏳ Pending'}</b></td>
+      <td><b style="color:${bg}">${txt}</b></td>
       <td>
-        <button onclick="delEntry(${x.id})" style="background:red;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px">Del</button>
-        <button onclick="apprEntryByVal('${x.id}')" style="padding:4px 8px;border-radius:4px;cursor:pointer;background:${x.app === 'Yes' ? '#ff9800' : '#388e3c'};color:white;border:none">${x.app === 'Yes' ? 'Revoke' : 'Approve'}</button>
+        <button onclick="delEntry(${x.id})" style="background:#555;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px">Del</button>
+        <button onclick="rejectEntryVal('${x.id}')" style="background:crimson;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px">Reject</button>
+        <button onclick="apprEntryByVal('${x.id}')" style="padding:4px 8px;border-radius:4px;cursor:pointer;background:${x.app === 'Yes' ? '#ff9800' : '#388e3c'};color:white;border:none">${x.app === 'Yes' ? 'Revoke Appr' : 'Approve'}</button>
       </td>
-    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px">No entries found</td></tr>';
+    </tr>`}).join('') || '<tr><td colspan="8" style="text-align:center;color:#999;padding:20px">No entries found</td></tr>';
       
       const mgrSel = document.getElementById('adm-filter-mgr');
       if (mgrSel.options.length <= 1) {
@@ -2220,6 +2361,13 @@
         const idx = database.findIndex(x => x.id === id);
         if(idx === -1) return;
         database[idx].app = (database[idx].app === 'Yes' ? 'No' : 'Yes'); 
+        await syncData(); updAdmin(); renderAll(); 
+    }
+    async function rejectEntryVal(id) {
+        id = Number(id);
+        const idx = database.findIndex(x => x.id === id);
+        if(idx === -1) return;
+        database[idx].app = 'Rejected';
         await syncData(); updAdmin(); renderAll(); 
     }
 
@@ -2436,7 +2584,11 @@ ${context}`,
     // ─── INIT ─────────────────────────────────────────────────────────
     window.onload = async function () {
       await loadAllData();
-      if (localStorage.getItem('ld_auth_session')) launch();
+      if (localStorage.getItem('ld_auth_session')) {
+        launch();
+      } else {
+        document.getElementById('loginPage').style.display = 'flex';
+      }
       setTimeout(() => {
         enableLoginButton();
       }, 5000);
