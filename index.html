@@ -127,7 +127,7 @@
     .calendar-day { background:white; border:1px solid var(--border); min-height:130px; padding:10px; border-radius:10px; transition:.2s; }
     .calendar-day:hover { border-color: var(--primary); }
     .calendar-day-num { font-weight:800; font-size:13px; color:var(--text-muted); margin-bottom:6px; display:inline-block; }
-    .cal-entry { font-size:10px; padding:5px 8px; border-radius:4px; margin-bottom:4px; font-weight:600; display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+    .cal-entry { font-size:8px; padding:3px 5px; line-height:1.2; border-radius:4px; margin-bottom:4px; font-weight:600; display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
     .entry-visit { background:#DBEAFE; color:#1D4ED8; }
     .entry-trg { background:#EDE9FE; color:#6D28D9; }
     .entry-report { background:#D1FAE5; color:#065F46; }
@@ -707,6 +707,9 @@
               <button onclick="downloadWallExcel()"
                 style="background:#10b981;color:white;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">📥
                 Download Excel</button>
+              <button onclick="downloadMyWallPDF()"
+                style="background:#0284c7;color:white;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">📥
+                Download My Calendar</button>
               <button onclick="downloadWallPDF()"
                 style="background:#e65100;color:white;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">📥
                 Download PDF</button>
@@ -1298,13 +1301,8 @@
 
       if (conflicts.length > 0) {
         const details = formatConflictDetails(conflicts);
-        if (!isPrivileged()) {
-          alert(`⛔ SCHEDULING CONFLICT\n\n"${r}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nManagers cannot override conflicts.`);
-          return;
-        } else {
-          const override = confirm(`⚠️ CONFLICT DETECTED — Override?\n\n"${r}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nClick OK to force-schedule.`);
-          if (!override) return;
-        }
+        const confirmSameDay = confirm(`⛔ SCHEDULING CONFLICT\n\n"${r}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nDo you want to submit on the same day?`);
+        if (!confirmSameDay) return;
       }
 
       const newEntry = {
@@ -1338,13 +1336,8 @@
 
       if (conflicts.length > 0) {
         const details = formatConflictDetails(conflicts);
-        if (!isPrivileged()) {
-          alert(`⛔ SCHEDULING CONFLICT\n\n"${store}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nManagers cannot override conflicts.`);
-          return;
-        } else {
-          const override = confirm(`⚠️ CONFLICT DETECTED — Override?\n\n"${store}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nClick OK to force-schedule.`);
-          if (!override) return;
-        }
+        const confirmSameDay = confirm(`⛔ SCHEDULING CONFLICT\n\n"${store}" already has ${conflicts.length} entry(s) during this period:\n\n${details}\n\nDo you want to submit on the same day?`);
+        if (!confirmSameDay) return;
       }
 
       const cats = [...document.querySelectorAll('input[name=t_cat]:checked')].map(c => c.value);
@@ -1812,7 +1805,7 @@
     }
 
     // ─── WALL ─────────────────────────────────────────────────────────
-    function renderWall() {
+    function renderWall(filterMgr = null) {
       const gridTravel = document.getElementById('wallGridTravel');
       const gridTraining = document.getElementById('wallGridTraining');
       if (gridTravel) gridTravel.innerHTML = '';
@@ -1848,20 +1841,22 @@
         divTraining.innerHTML = `<span class="calendar-day-num">${d}</span>`;
 
         database.forEach(e => {
+          if (filterMgr && e.mgr !== filterMgr) return;
           if (e.app === 'Rejected') return;
           if (new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
             const s = e.app !== 'Yes' ? 'background:#FEE2E2;color:#B91C1C;border-left:2px solid #EF4444;' : '';
             if (e.type === 'Visit') {
-              divTravel.innerHTML += `<div class="cal-entry entry-visit" style="${s}">${e.loc} - ${e.mgr.split(' ').slice(1).join(' ') || e.mgr}</div>`;
+              divTravel.innerHTML += `<div class="cal-entry entry-visit" style="${s}">${e.mgr.split(' ')[0]} - ${e.loc}</div>`;
             } else if (e.type === 'Training') {
-              divTraining.innerHTML += `<div class="cal-entry entry-trg" style="${s}">${e.topic || '—'} - ${e.venue || e.loc}</div>`;
+              divTraining.innerHTML += `<div class="cal-entry entry-trg" style="${s}">${e.mgr.split(' ')[0]} - ${e.topic || '—'} - ${e.venue || e.loc}</div>`;
             }
           }
         });
 
         visitReports.forEach(r => {
+          if (filterMgr && r.mgr !== filterMgr) return;
           if (new Date(cur) >= new Date(r.from) && new Date(cur) <= new Date(r.to)) {
-            divTravel.innerHTML += `<div class="cal-entry entry-report">📋 ${r.showroom} - ${r.mgr.split(' ').slice(1).join(' ') || r.mgr}</div>`;
+            divTravel.innerHTML += `<div class="cal-entry entry-report">📋 ${r.mgr.split(' ')[0]} - ${r.showroom}</div>`;
           }
         });
 
@@ -1907,9 +1902,9 @@
           if (new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
             const s = e.app !== 'Yes' ? 'background:#FEE2E2;color:#B91C1C;border-left:2px solid #EF4444;' : '';
             if (e.type === 'Visit') {
-              cell.innerHTML += `<div class="cal-entry entry-visit" style="${s}">${e.loc} - ${e.mgr.split(' ').slice(1).join(' ') || e.mgr}</div>`;
+              cell.innerHTML += `<div class="cal-entry entry-visit" style="${s}">${e.mgr.split(' ')[0]} - ${e.loc}</div>`;
             } else if (e.type === 'Training') {
-              cell.innerHTML += `<div class="cal-entry entry-trg" style="${s}">${e.topic || '—'} - ${e.venue || e.loc}</div>`;
+              cell.innerHTML += `<div class="cal-entry entry-trg" style="${s}">${e.mgr.split(' ')[0]} - ${e.topic || '—'} - ${e.venue || e.loc}</div>`;
             }
           }
         });
@@ -1950,6 +1945,53 @@
 
       html2pdf().from(element).set(opt).save().then(() => {
         if (btn) btn.innerText = originalText;
+      });
+    }
+
+    function downloadMyWallPDF() {
+      if (!currentUser || !currentUser.name) return alert('Please login to download your calendar.');
+      
+      const element = document.getElementById('pdf-export-container');
+      const monthInput = document.getElementById('wallMonth');
+      let monthLabel = 'Calendar';
+      if (monthInput && monthInput.value) {
+        const [y, m] = monthInput.value.split('-');
+        const date = new Date(y, m - 1, 1);
+        monthLabel = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        document.getElementById('travel-title').innerText = `✈ My Travel Entries - ${monthLabel}`;
+        document.getElementById('training-title').innerText = `🎓 My Training Entries - ${monthLabel}`;
+      } else {
+        document.getElementById('travel-title').innerText = `✈ My Travel Entries`;
+        document.getElementById('training-title').innerText = `🎓 My Training Entries`;
+      }
+
+      // Filter Wall for my entries
+      renderWall(currentUser.name);
+
+      const opt = {
+        margin: 10,
+        filename: `My_Calendar_${monthLabel.replace(' ', '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+      };
+
+      const btn = event.currentTarget || document.activeElement;
+      const originalText = btn.innerText;
+      if (btn) btn.innerText = '⏳ Generating...';
+
+      html2pdf().from(element).set(opt).save().then(() => {
+        if (btn) btn.innerText = originalText;
+        
+        // Reset titles and re-render full wall
+        if (monthInput && monthInput.value) {
+          document.getElementById('travel-title').innerText = `✈ Travel Entries - ${monthLabel}`;
+          document.getElementById('training-title').innerText = `🎓 Training Entries - ${monthLabel}`;
+        } else {
+          document.getElementById('travel-title').innerText = `✈ Travel Entries`;
+          document.getElementById('training-title').innerText = `🎓 Training Entries`;
+        }
+        renderWall();
       });
     }
 
