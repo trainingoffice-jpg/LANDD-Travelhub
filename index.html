@@ -124,6 +124,11 @@
 
     /* ── CALENDAR ── */
     .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; background:#F0F4FF; padding:10px; border-radius:var(--card-radius); }
+    .matrix-table { width: 100%; border-collapse: collapse; background: white; font-size: 11px; }
+    .matrix-table th, .matrix-table td { border: 1px solid var(--border); padding: 5px; text-align: center; vertical-align: top; }
+    .matrix-table th { background: rgba(240,245,255,0.8); color: var(--text-muted); font-weight: 800; }
+    .matrix-table td.date-col { font-weight: 800; background: #f8fafc; color: var(--primary); width: 40px; vertical-align: middle; }
+    .matrix-container { overflow-x: auto; background: #F0F4FF; padding: 10px; border-radius: var(--card-radius); }
     .calendar-day { background:white; border:1px solid var(--border); min-height:130px; padding:10px; border-radius:10px; transition:.2s; }
     .calendar-day:hover { border-color: var(--primary); }
     .calendar-day-num { font-weight:800; font-size:13px; color:var(--text-muted); margin-bottom:6px; display:inline-block; }
@@ -1746,18 +1751,20 @@
 
       let tShow = myTravel.slice(travelPage * 5, travelPage * 5 + 5);
       tTb.innerHTML = tShow.map(i => {
-        const bg = i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : (i.app === 'Rejected' ? 'rgba(255,0,0,0.1)' : 'rgba(255,165,0,0.2)');
-        const col = i.app === 'Yes' ? '#4ade80' : (i.app === 'Rejected' ? 'crimson' : '#fbbf24');
-        const txt = i.app === 'Yes' ? 'Approved' : (i.app === 'Rejected' ? 'Rejected' : 'Pending');
+        const isBad = ['Rejected', 'Deleted', 'Revoked'].includes(i.app);
+        const bg = i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : (isBad ? 'rgba(255,0,0,0.1)' : 'rgba(255,165,0,0.2)');
+        const col = i.app === 'Yes' ? '#4ade80' : (isBad ? 'crimson' : '#fbbf24');
+        const txt = i.app === 'Yes' ? 'Approved' : (isBad ? i.app : 'Pending');
         return `<tr><td>${i.from}</td><td>${i.to}</td><td>${i.loc}</td><td>${i.topic}</td><td><span style="padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;background:${bg};color:${col}">${txt}</span> ${i.app === 'No' ? `<button onclick="revokeMine(${i.id})" style="background:none; border:none; color:red; cursor:pointer; font-size:10px; text-decoration:underline;">Revoke</button>` : ''}</td></tr>`;
       }).join('');
       document.getElementById('travelPageInfo').innerText = myTravel.length ? `Showing ${travelPage * 5 + 1}-${Math.min(travelPage * 5 + 5, myTravel.length)} of ${myTravel.length}` : 'No entries';
 
       let trShow = myTrain.slice(trainingPage * 5, trainingPage * 5 + 5);
       trTb.innerHTML = trShow.map(i => {
-        const bg = i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : (i.app === 'Rejected' ? 'rgba(255,0,0,0.1)' : 'rgba(255,165,0,0.2)');
-        const col = i.app === 'Yes' ? '#4ade80' : (i.app === 'Rejected' ? 'crimson' : '#fbbf24');
-        const txt = i.app === 'Yes' ? 'Approved' : (i.app === 'Rejected' ? 'Rejected' : 'Pending');
+        const isBad = ['Rejected', 'Deleted', 'Revoked'].includes(i.app);
+        const bg = i.app === 'Yes' ? 'rgba(0,255,128,0.2)' : (isBad ? 'rgba(255,0,0,0.1)' : 'rgba(255,165,0,0.2)');
+        const col = i.app === 'Yes' ? '#4ade80' : (isBad ? 'crimson' : '#fbbf24');
+        const txt = i.app === 'Yes' ? 'Approved' : (isBad ? i.app : 'Pending');
         return `<tr><td>${i.from} to ${i.to}</td><td>${i.topic}</td><td>${i.loc}</td><td>${i.venue || '—'}</td><td><span style="padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;background:${bg};color:${col}">${txt}</span> ${i.app === 'No' ? `<button onclick="revokeMine(${i.id})" style="background:none; border:none; color:red; cursor:pointer; font-size:10px; text-decoration:underline;">Revoke</button>` : ''}</td></tr>`;
       }).join('');
       document.getElementById('trainingPageInfo').innerText = myTrain.length ? `Showing ${trainingPage * 5 + 1}-${Math.min(trainingPage * 5 + 5, myTrain.length)} of ${myTrain.length}` : 'No entries';
@@ -1765,8 +1772,8 @@
 
     async function revokeMine(id) {
        if(!confirm('Are you sure you want to revoke/delete this pending entry?')) return;
-       database = database.filter(x => x.id !== id);
-       await db.ref('ld_entries/' + id).remove();
+       const idx = database.findIndex(x => x.id === id);
+       if (idx !== -1) database[idx].app = 'Revoked';
        await syncData();
        renderAll();
     }
@@ -1778,7 +1785,7 @@
 
       if (tb) {
         database.filter(item => {
-          if (item.app === 'Rejected') return false;
+          if (['Rejected', 'Deleted', 'Revoked'].includes(item.app)) return false;
           if (mLocFilter && item.loc !== mLocFilter) return false;
           if (mDateFilter && (mDateFilter < item.from || mDateFilter > item.to)) return false;
           return true;
@@ -1814,62 +1821,104 @@
       const monthInput = document.getElementById('wallMonth');
       if (!monthInput || !monthInput.value) return;
 
+      renderTravelMatrix('wallMonth', 'wallGridTravel', filterMgr);
+
       const [y, m] = monthInput.value.split('-').map(Number);
       const days = new Date(y, m, 0).getDate();
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      
+      // Render Training Calendar
+      if (gridTraining) {
+        gridTraining.className = 'calendar-grid';
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dayNames.forEach(d => {
+          const h = document.createElement('div'); h.style.cssText = 'background:rgba(240,245,255,0.8);color:var(--text-muted);padding:8px 6px;text-align:center;font-size:11px;font-weight:800;border-radius:6px;border-bottom:2px solid var(--primary);'; h.innerText = d;
+          gridTraining.appendChild(h);
+        });
 
-      dayNames.forEach(d => {
-        const createHeaderRow = () => { const h = document.createElement('div'); h.style.cssText = 'background:rgba(255,255,255,0.05);color:var(--text-muted);padding:8px 6px;text-align:center;font-size:11px;font-weight:800;border-radius:6px;border-bottom:2px solid var(--primary);'; h.innerText = d; return h; };
-        if (gridTravel) gridTravel.appendChild(createHeaderRow());
-        if (gridTraining) gridTraining.appendChild(createHeaderRow());
-      });
+        const firstDay = new Date(y, m - 1, 1).getDay();
+        for (let i = 0; i < firstDay; i++) {
+          const e = document.createElement('div'); e.className = 'calendar-day'; e.style.opacity = '0.3';
+          gridTraining.appendChild(e);
+        }
 
-      const firstDay = new Date(y, m - 1, 1).getDay();
-      for (let i = 0; i < firstDay; i++) {
-        const createEmptyDay = () => { const e = document.createElement('div'); e.className = 'calendar-day'; e.style.opacity = '0.3'; return e; };
-        if (gridTravel) gridTravel.appendChild(createEmptyDay());
-        if (gridTraining) gridTraining.appendChild(createEmptyDay());
-      }
+        for (let d = 1; d <= days; d++) {
+          const cur = `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          const divTraining = document.createElement('div'); divTraining.className = 'calendar-day';
+          divTraining.innerHTML = `<span class="calendar-day-num">${d}</span>`;
 
-      for (let d = 1; d <= days; d++) {
-        const cur = `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
-
-        const divTravel = document.createElement('div'); divTravel.className = 'calendar-day';
-        divTravel.innerHTML = `<span class="calendar-day-num">${d}</span>`;
-
-        const divTraining = document.createElement('div'); divTraining.className = 'calendar-day';
-        divTraining.innerHTML = `<span class="calendar-day-num">${d}</span>`;
-
-        database.forEach(e => {
-          if (filterMgr && e.mgr !== filterMgr) return;
-          if (e.app === 'Rejected') return;
-          if (new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
-            const s = e.app !== 'Yes' ? 'background:#FEE2E2;color:#B91C1C;border-left:2px solid #EF4444;' : '';
-            if (e.type === 'Visit') {
-              divTravel.innerHTML += `<div class="cal-entry entry-visit" style="${s}">${e.mgr.split(' ')[0]} - ${e.loc}</div>`;
-            } else if (e.type === 'Training') {
+          database.forEach(e => {
+            if (filterMgr && e.mgr !== filterMgr) return;
+            if (['Rejected', 'Deleted', 'Revoked'].includes(e.app)) return;
+            if (e.type === 'Training' && new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
+              const s = e.app !== 'Yes' ? 'background:#FEE2E2;color:#B91C1C;border-left:2px solid #EF4444;' : '';
               divTraining.innerHTML += `<div class="cal-entry entry-trg" style="${s}">${e.mgr.split(' ')[0]} - ${e.topic || '—'} - ${e.venue || e.loc}</div>`;
             }
-          }
-        });
-
-        visitReports.forEach(r => {
-          if (filterMgr && r.mgr !== filterMgr) return;
-          if (new Date(cur) >= new Date(r.from) && new Date(cur) <= new Date(r.to)) {
-            divTravel.innerHTML += `<div class="cal-entry entry-report">📋 ${r.mgr.split(' ')[0]} - ${r.showroom}</div>`;
-          }
-        });
-
-        if (gridTravel) gridTravel.appendChild(divTravel);
-        if (gridTraining) gridTraining.appendChild(divTraining);
+          });
+          gridTraining.appendChild(divTraining);
+        }
       }
     }
 
-    function renderMonthCalendar(monthInputId, gridId, typeFilter) {
+    function renderTravelMatrix(monthInputId, gridId, filterMgr = null) {
       const monthInput = document.getElementById(monthInputId);
       const grid = document.getElementById(gridId);
       if (!grid || !monthInput || !monthInput.value) return;
       grid.innerHTML = '';
+      grid.className = 'matrix-container';
+
+      const [y, m] = monthInput.value.split('-').map(Number);
+      const days = new Date(y, m, 0).getDate();
+
+      const items = database.filter(e => e.type === 'Visit' && !['Rejected', 'Deleted', 'Revoked'].includes(e.app));
+      let managers = [...new Set(items.map(e => e.mgr))].sort();
+      if (managers.length === 0) {
+        managers = masterData.managers.map(mObj => mObj.name).sort();
+      }
+      if (filterMgr) managers = managers.filter(m => m === filterMgr);
+
+      let html = `<table class="matrix-table"><thead><tr><th class="date-col">Date</th>`;
+      managers.forEach(mgr => {
+        html += `<th>${mgr.split(' ')[0]}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+
+      for (let d = 1; d <= days; d++) {
+        const cur = `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+        html += `<tr><td class="date-col">${d}</td>`;
+
+        managers.forEach(mgr => {
+          let cellHtml = '';
+          items.forEach(e => {
+            if (e.mgr === mgr && new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
+              const s = e.app !== 'Yes' ? 'background:#FEE2E2;color:#B91C1C;border-left:2px solid #EF4444;' : '';
+              cellHtml += `<div class="cal-entry entry-visit" style="${s}">${e.loc}</div>`;
+            }
+          });
+          if (gridId === 'wallGridTravel') {
+            visitReports.forEach(r => {
+              if (r.mgr === mgr && new Date(cur) >= new Date(r.from) && new Date(cur) <= new Date(r.to)) {
+                cellHtml += `<div class="cal-entry entry-report">📋 ${r.showroom}</div>`;
+              }
+            });
+          }
+          html += `<td>${cellHtml}</td>`;
+        });
+        html += `</tr>`;
+      }
+      html += `</tbody></table>`;
+      grid.innerHTML = html;
+    }
+
+    function renderMonthCalendar(monthInputId, gridId, typeFilter, filterMgr = null) {
+      if (typeFilter === 'Visit') {
+        renderTravelMatrix(monthInputId, gridId, filterMgr);
+        return;
+      }
+      const monthInput = document.getElementById(monthInputId);
+      const grid = document.getElementById(gridId);
+      if (!grid || !monthInput || !monthInput.value) return;
+      grid.innerHTML = '';
+      grid.className = 'calendar-grid';
 
       const [y, m] = monthInput.value.split('-').map(Number);
       const days = new Date(y, m, 0).getDate();
@@ -1898,7 +1947,7 @@
         cell.innerHTML = `<span class="calendar-day-num">${d}</span>`;
 
         items.forEach(e => {
-          if (e.app === 'Rejected') return;
+          if (['Rejected', 'Deleted', 'Revoked'].includes(e.app)) return;
           if (new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
             const s = e.app !== 'Yes' ? 'background:#FEE2E2;color:#B91C1C;border-left:2px solid #EF4444;' : '';
             if (e.type === 'Visit') {
@@ -2016,7 +2065,7 @@
           let cellText = `${d}\n`;
           
           database.forEach(e => {
-            if (e.app === 'Rejected') return;
+            if (['Rejected', 'Deleted', 'Revoked'].includes(e.app)) return;
             if (e.type === type && new Date(cur) >= new Date(e.from) && new Date(cur) <= new Date(e.to)) {
               const prefix = e.app !== 'Yes' ? '[PENDING] ' : '';
               if (type === 'Visit') {
@@ -2340,8 +2389,8 @@
       ).sort((a,b) => b.id - a.id);
 
       tb.innerHTML = filtered.map((x, i) => {
-        const bg = x.app === 'Yes' ? 'green' : (x.app === 'Rejected' ? 'crimson' : '#ff9800');
-        const txt = x.app === 'Yes' ? '✔ Approved' : (x.app === 'Rejected' ? '❌ Rejected' : '⏳ Pending');
+        const bg = x.app === 'Yes' ? 'green' : (['Rejected', 'Deleted', 'Revoked'].includes(x.app) ? 'crimson' : '#ff9800');
+        const txt = x.app === 'Yes' ? '✔ Approved' : (['Rejected', 'Deleted', 'Revoked'].includes(x.app) ? `❌ ${x.app}` : '⏳ Pending');
         return `
     <tr>
       <td><input type="checkbox" class="admin-chk" value="${x.id}" onchange="updateBulkBar()"></td>
@@ -2386,10 +2435,7 @@
       if(!ids.length) return;
       if(!confirm(`Are you sure you want to delete ${ids.length} entries?`)) return;
       
-      database = database.filter(x => !ids.includes(x.id));
-      const updates = {};
-      ids.forEach(id => { updates[id] = null; });
-      await db.ref('ld_entries').update(updates);
+      database.forEach(x => { if(ids.includes(x.id)) x.app = 'Deleted'; });
       
       await syncData();
       updAdmin();
@@ -2397,7 +2443,7 @@
       alert(`Bulk deleted ${ids.length} entries.`);
     }
 
-    async function delEntry(id) { if(!confirm('Delete?')) return; database = database.filter(x => x.id !== id); await db.ref('ld_entries/' + id).remove(); await syncData(); updAdmin(); renderAll(); }
+    async function delEntry(id) { if(!confirm('Delete?')) return; const idx = database.findIndex(x => x.id === id); if (idx !== -1) database[idx].app = 'Deleted'; await syncData(); updAdmin(); renderAll(); }
     async function apprEntryByVal(id) { 
         id = Number(id);
         const idx = database.findIndex(x => x.id === id);
